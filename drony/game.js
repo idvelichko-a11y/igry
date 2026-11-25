@@ -398,6 +398,11 @@ function pickTarget(){ let tg=null; const es=D.filter(d=>isEnemy(d)&&!d.dead).so
   for(const e of es){ aimOf(me,e,tB); if(me.lock){ tg=e; break; } }
   if(!tg){ const b=G.rule==='base'?enB():null; if(b&&!b.dead){ aimOf(me,b,tB); if(me.lock) tg=b; } }
   if(!tg){ aimOf(me,null,tB); tg=es[0]||null; } return tg; }
+/* після збиття — спостерігаєш за живими: спершу за своїми, потім за суперниками */
+function specStep(dt){ const fireTxt=()=>{ $('bFire').textContent=me.ch===2?'ГАРПУН':me.ch===5?'МІНА':'ВОГОНЬ'; }; if(!me.dead||G.kind==='free'||G.phase==='end'){ if(G.specD){ G.specD=null; fireTxt(); G.camYaw=me.yaw; G.camSnap=true; } G.deadT=0; return; }
+  G.deadT=(G.deadT||0)+dt; const list=D.filter(q=>q!==me&&!q.dead&&q.side===me.side).concat(D.filter(q=>q!==me&&!q.dead&&q.side!==me.side)); if(!list.length){ if(G.specD){ G.specD=null; fireTxt(); } return; } if(G.deadT<1.6) return;
+  if(!G.specD||G.specD.dead||D.indexOf(G.specD)<0){ G.specD=list[0]; G.camYaw=G.specD.yaw; G.camSnap=true; $('bFire').textContent='ДАЛІ'; }
+  else if(I.fireTap){ G.specD=list[(list.indexOf(G.specD)+1)%list.length]; G.camYaw=G.specD.yaw; G.camSnap=true; beep(700,0,.05,'square',.06); } }
 function step(dt){ G.t+=dt;
   G.wa+=.02*dt*Math.sin(G.t*.11); G.ws=Math.max(0,3.2+2.2*Math.sin(G.t*.13)+1.6*Math.sin(G.t*.71+1)*Math.sin(G.t*.29)); G.wx=Math.cos(G.wa)*G.ws; G.wz=Math.sin(G.wa)*G.ws;
   if(auth()){ G.rainIn-=dt; if(!G.rainW&&G.rainIn<5&&G.rain<=0){ G.rainW=true; say('Насувається дощ',3); send({t:'rw'}); } if(G.rainIn<=0&&G.rain<=0){ G.rain=20; G.rainIn=75+Math.random()*45; G.rainW=false; send({t:'rain'}); say('Дощ: мотори тягнуть гірше, видно й чути менше',3.5); } }
@@ -413,7 +418,7 @@ function step(dt){ G.t+=dt;
       else if((I.fire||key.fire||I.fireTap||(G.auto&&me.lock&&me.ch!==5))&&(me.ch===2?me.hcd:me.cd)<=0&&G.phase==='fight') fire(me,tg,false,tB.clone()); }
     G.aimed=D.some(q=>{ if(q.ch!==9||q.side===me.side||q.dead) return false; if(q.aimT>0&&q.aimId===me.id) return true; if(!q.zoom||!q.ld) return false; tA.copy(me.p).sub(q.p); const al=tA.dot(q.ld); return al>2&&al<q.le+2&&Math.sqrt(Math.max(0,tA.lengthSq()-al*al))<2.2; }); if(G.aimed&&!me.dead){ G.warnT=(G.warnT||0)-dt; if(G.warnT<=0){ G.warnT=.4; beep(1250,0,.06,'square',.12); } }
     detect(dt); pkStep(dt); }
-  I.fireTap=false; stepShots(dt); fireWorld(dt); mineStep(dt);
+  specStep(dt); I.fireTap=false; stepShots(dt); fireWorld(dt); mineStep(dt);
   if(G.kind==='free'){ for(let i=G.left.length-1;i>=0;i--){ const m=W.marks[G.left[i]]; if(Math.hypot(me.p.x-m[0],me.p.y-m[1],me.p.z-m[2])<1.5){ markM[G.left[i]].visible=false; G.left.splice(i,1); G.got++; beep(784,0,.12,'triangle',.16); beep(1047,.1,.18,'triangle',.16); say(G.left.length?'Мітка '+G.got+' з '+W.marks.length:'Усі мітки зібрано за '+fmtT(G.t)+'!',G.left.length?1.6:6); } } }
   else if(G.rule==='duel') duelRules(dt); else contRules(dt);
   if(G.hitT>0)G.hitT-=dt; if(G.msgT>0)G.msgT-=dt; if(G.burnT>0)G.burnT-=dt; }
@@ -501,11 +506,11 @@ function placeD(d){ const m=d.mesh; if(!m) return; m.position.copy(d.p); m.rotat
     if(sc){ if(!d.ld) d.ld=new THREE.Vector3(); aimDir(d,d.ld); pv.copy(d.p).addScaledVector(d.ld,.6); d.le=sray(pv,d.ld,170); a.setXYZ(0,pv.x,pv.y,pv.z); a.setXYZ(1,pv.x+d.ld.x*d.le,pv.y+d.ld.y*d.le,pv.z+d.ld.z*d.le); a.needsUpdate=true; d.laser.material.opacity=d===me?.25:.7; }
     else if(d.laser.visible){ a.setXYZ(0,d.p.x,d.p.y-.05,d.p.z); a.setXYZ(1,tg.p.x,tg.p.y,tg.p.z); a.needsUpdate=true; d.laser.material.opacity=.45+.4*Math.abs(Math.sin(G.t*12)); } }
   if(d===me&&!d.dead) m.visible=!(d.ch===9&&d.zoom); }
-function place(){ const d=me; for(const q of D) placeD(q);
+function place(){ const d=(G.specD&&me.dead)?G.specD:me; for(const q of D) placeD(q);
   let dy=G.camYaw-d.yaw; G.camYaw-=dy*.12; const sy=Math.sin(G.camYaw), cy=Math.cos(G.camYaw), back=d.indoor?2.3:3.6, up=d.indoor?.7:1.35;
   let bx=d.p.x, by=d.p.y, bz=d.p.z; for(let i=1;i<=10;i++){ const f=i/10, x=d.p.x+sy*back*f, y=d.p.y+up*f, z=d.p.z+cy*back*f; if(W.inside(x,y,z,.18)||y<W.floorAt(x,z)+.2) break; bx=x; by=y; bz=z; }
   if(d.ch===9&&d.zoom&&!d.dead){ aimDir(d,tv); cam.position.copy(d.p).addScaledVector(tv,.7); cam.lookAt(cam.position.x+tv.x*20,cam.position.y+tv.y*20,cam.position.z+tv.z*20); pv.copy(cam.position); const en=sray(pv,tv,170), h=srayHit(d,pv,tv,en); G.onT=!!h; G.rng=h?h.d:en; }
-  else { cam.position.lerp(tv.set(bx,by,bz),.35); cam.lookAt(d.p.x-sy*5,d.p.y+.35,d.p.z-cy*5); }
+  else { cam.position.lerp(tv.set(bx,by,bz),G.camSnap?1:.35); G.camSnap=false; cam.lookAt(d.p.x-sy*5,d.p.y+.35,d.p.z-cy*5); }
   shadow.position.set(d.p.x,W.floorAt(d.p.x,d.p.z)+.03,d.p.z); shadow.material.opacity=clamp(.4-d.p.y*.008,.08,.4); shadow.scale.setScalar(1+d.p.y*.03);
   wet+=((G.rain>0?1:0)-wet)*.04; scene.background.copy(SKY0).lerp(SKY1,wet); murkK+=((murk(d.p)?1:0)-murkK)*.08; scene.background.lerp(MURK,murkK*.85); scene.fog.color.copy(scene.background); scene.fog.near=(160-110*wet)*(1-murkK)+1.5*murkK; scene.fog.far=(560-330*wet)*(1-murkK)+26*murkK; skyStep(); rainM.visible=wet>.05&&!d.indoor;
   if(rainM.visible){ rainM.position.set(cam.position.x,cam.position.y,cam.position.z); rainM.material.opacity=.55*wet; for(let i=0;i<RN;i++){ let y=rainP[i*6+1]-.55; if(y<-8) y+=26; rainP[i*6+1]=y; rainP[i*6+4]=y-1.1; } rainG.attributes.position.needsUpdate=true; }
@@ -541,7 +546,8 @@ function hud(){ const p=DR[me.ch], hs=Math.hypot(me.v.x,me.v.z), wr=Math.atan2(G
     $('bFire').classList.toggle('cd',(me.ch===2?me.hcd:me.cd)>0); $('bDash').classList.toggle('cd',me.dcd>0); }
   for(;ti<tagEls.length;ti++) tagEls[ti].hidden=true;
   const scp=me.ch===9&&me.zoom>0&&!me.dead; scEl.hidden=!scp; if(scp){ scEl.className=G.onT?'on':''; scEl.firstChild.textContent='×'+(me.zoom===2?8:4)+' · '+(G.rng>=169?'далі 170 м':Math.round(G.rng)+' м')+(me.cd>0?' · перезаряд '+me.cd.toFixed(1)+' с':' · готово'); } $('bScope').classList.toggle('on',scp);
-  let m=G.msgT>0?G.msg:''; if(G.aimed&&!me.dead&&duel) m='На тебе цілиться Бабка — ховайся!';  if(!m){ if(me.batt<=0) m='Заряд скінчився'+(duel?'':'. Натисни «На старт»'); else if(me.batt<.15) m='Заряд на межі — шукай блакитну зарядку'; else if(me.prop<30) m='Гвинти побиті — на блакитній зарядці їх полагодять'; else if(Math.abs(me.p.x)>W.LIM||Math.abs(me.p.z)>W.LIM) m='Сигнал слабшає — вертайся'; else if(me.corn) m='У кукурудзі: стебла гальмують'; else if(inFog(me.p)) m='Туман: видно метрів на двадцять'; else if(inCloud(me.p)) m='У хмарі нічого не видно'; else if(inSmoke(me.p)) m='Дим від пожежі: нічого не видно'; else if(me.p.y>TOPY-1.2) m='Стеля: вище за найвищу вежу не злетіти'; }
+  let m=G.msgT>0?G.msg:''; if(G.aimed&&!me.dead&&duel) m='На тебе цілиться Бабка — ховайся!';  if(G.specD&&me.dead&&G.msgT<=0) m='Спостерігаєш: '+(G.specD.side===me.side?'напарник ':'суперник ')+label(G.specD)+' · '+DR[G.specD.ch].n+(D.filter(q=>q!==me&&!q.dead).length>1?' · F або «ДАЛІ» — інший':'');
+  if(!m){ if(me.batt<=0) m='Заряд скінчився'+(duel?'':'. Натисни «На старт»'); else if(me.batt<.15) m='Заряд на межі — шукай блакитну зарядку'; else if(me.prop<30) m='Гвинти побиті — на блакитній зарядці їх полагодять'; else if(Math.abs(me.p.x)>W.LIM||Math.abs(me.p.z)>W.LIM) m='Сигнал слабшає — вертайся'; else if(me.corn) m='У кукурудзі: стебла гальмують'; else if(inFog(me.p)) m='Туман: видно метрів на двадцять'; else if(inCloud(me.p)) m='У хмарі нічого не видно'; else if(inSmoke(me.p)) m='Дим від пожежі: нічого не видно'; else if(me.p.y>TOPY-1.2) m='Стеля: вище за найвищу вежу не злетіти'; }
   $('hMsg').textContent=m; $('hit').style.opacity=G.hitT>0?(G.hitT/.35).toFixed(2):0; }
 
 /* ---------- звук ---------- */
@@ -625,5 +631,5 @@ function frame(ts){ const dt=Math.min(.1,(ts-last)/1000||0); last=ts; if(dt>0) f
   else { G.t+=dt; if(G.mode==='menu'||G.mode==='room'){ birdPos(); skyStep(); cam.position.set(Math.sin(G.t*.08)*90,38,Math.cos(G.t*.08)*90+10); cam.lookAt(0,6,-10); } netFrame(dt); }
   if(renderer) renderer.render(scene,cam); audioFrame(); requestAnimationFrame(frame); }
 new ResizeObserver(resize).observe(cv); resize(); ui(); if(invite&&glOK) joinGame(invite); requestAnimationFrame(frame);
-if(isLoc) window.__d={get me(){return me;},get foe(){return foe;},get D(){return D;},G:G,I:I,W:W,DR:DR,R:R,BASE:BASE,step:step,start:start,soloCfg:soloCfg,place:place,hud:hud,net:()=>({room:inRoom,host:isHost,id:myId,code:code,st:netState,msg:G.netMsg,n:R.P.length}),PK:PK,FL:FL,flagM:flagM,PSP:PSP,FSP:FSP,BSP:BSP,BIRDS:BIRDS,CLD:CLD,inCloud:inCloud,fogStart:fogStart,murk:murk,pkAdd:pkAdd,fireState:(x,z)=>{ const c=cellAt(x,z); return c<0?0:fireT[c]; },cornAt:cornAt,hayState:()=>Array.from(hayT),blocked:blocked,fA:fA,MN:MN,MK:MK,mineGo:mineGo,fireN:()=>[burning.length,Array.from(fireT).filter(v=>v<0).length,Array.from(hayT).filter(v=>v!==0).length]};
+if(isLoc) window.__d={get me(){return me;},get foe(){return foe;},get D(){return D;},G:G,I:I,W:W,DR:DR,R:R,BASE:BASE,step:step,start:start,soloCfg:soloCfg,place:place,hud:hud,net:()=>({room:inRoom,host:isHost,id:myId,code:code,st:netState,msg:G.netMsg,n:R.P.length}),PK:PK,FL:FL,flagM:flagM,PSP:PSP,FSP:FSP,BSP:BSP,BIRDS:BIRDS,CLD:CLD,inCloud:inCloud,fogStart:fogStart,murk:murk,pkAdd:pkAdd,fireState:(x,z)=>{ const c=cellAt(x,z); return c<0?0:fireT[c]; },cornAt:cornAt,hayState:()=>Array.from(hayT),blocked:blocked,fA:fA,MN:MN,MK:MK,mineGo:mineGo,cam:cam,fireN:()=>[burning.length,Array.from(fireT).filter(v=>v<0).length,Array.from(hayT).filter(v=>v!==0).length]};
 })();
