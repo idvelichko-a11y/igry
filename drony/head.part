@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Дрони над фермою</title>
+<meta name="description" content="3D-гра: дуель дронів над великою фермою. Удвох із двох телефонів або проти комп'ютера.">
+<meta name="theme-color" content="#1F4E5F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Unbounded:wght@500;700&display=swap">
+<style>
+:root{--bg:#F2F4F4;--card:#FFFFFF;--fg:#2C3E50;--mute:#66767F;--line:#D5DCDE;--main:#1F4E5F;--accent:#C9A961;--on-main:#FFFFFF;
+  --ov:rgba(14,26,31,.88);--ov-fg:#FFFFFF;--ov-mute:#C6D3D8;--star:#E3C77F;
+  --f-ui:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--f-head:"Unbounded","Manrope",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#10181B;--card:#18232A;--fg:#E6ECEE;--mute:#93A3AA;--line:#2A3940;--main:#86BACB;--accent:#D9BD7E;--on-main:#10181B;color-scheme:dark}}
+*{box-sizing:border-box} html,body{margin:0} [hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.5;overscroll-behavior:none;
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin:0}
+h1{font-family:var(--f-head);font-weight:700;font-size:clamp(1.1rem,3.4vw,1.7rem);line-height:1.2;margin:2px 0 0;color:var(--main)}
+.stage{position:relative;background:#BFDDEB;border-radius:14px;overflow:hidden;aspect-ratio:16/9;max-width:100%;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+@media (max-width:620px){.stage{aspect-ratio:4/3.2}}
+.stage>canvas#c{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;pointer-events:none;color:#fff;font-weight:700;font-size:clamp(.68rem,1.6vw,.86rem);line-height:1.35;text-shadow:0 1px 3px rgba(0,0,0,.6);font-variant-numeric:tabular-nums}
+#hL{left:10px;top:44px;background:rgba(14,26,31,.45);border-radius:10px;padding:6px 10px;min-width:150px}
+#hL b{font-weight:800} #hL .bar{height:7px;border-radius:4px;background:rgba(255,255,255,.25);overflow:hidden;margin:3px 0 4px} #hL .bar i{display:block;height:100%;background:#8FD08A;width:100%}
+#hMsg{left:0;right:0;top:34%;text-align:center;font-size:clamp(.9rem,2.4vw,1.2rem);color:#FFE7A8}
+#map{position:absolute;right:10px;top:44px;width:clamp(84px,17vw,150px);height:clamp(84px,17vw,150px);border-radius:10px;background:rgba(14,26,31,.5);pointer-events:none}
+#hit{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 80px 30px rgba(240,80,60,.75);opacity:0}
+.sb{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));font:inherit;font-weight:800;font-size:.8rem;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(14,26,31,.6);color:#fff;cursor:pointer;z-index:5}
+#bExit{left:8px} #bHome{right:8px}
+.stick{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:rgba(14,26,31,.25);pointer-events:none;z-index:3}
+.stick i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.8)}
+.tip{position:absolute;bottom:10px;width:44%;text-align:center;color:rgba(255,255,255,.85);font-size:.72rem;font-weight:700;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+body.m .tip,body.used .tip{display:none}
+#tipL{left:3%} #tipR{right:3%}
+.ov{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:8px;background:rgba(10,20,24,.35)}
+.card{background:var(--ov);color:var(--ov-fg);border-radius:14px;padding:12px 14px;max-width:620px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:8px;text-align:center}
+.card h3{font-family:var(--f-head);font-weight:700;font-size:clamp(.95rem,3.4vw,1.3rem);line-height:1.25;margin:0}
+.card p{margin:0;font-size:.86rem;color:var(--ov-mute)} .card .k{font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--star)}
+.chars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media (max-width:520px){.chars{grid-template-columns:repeat(2,1fr)}}
+.chars button{font:inherit;color:var(--ov-fg);background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.18);border-radius:12px;padding:7px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;text-align:left}
+.chars button.on{border-color:var(--star);background:rgba(227,199,127,.16)}
+.chars b{font-size:.9rem} .chars em{font-style:normal;font-size:.7rem;color:var(--star)}
+.stats{display:grid;grid-template-columns:auto 1fr;gap:1px 6px;font-size:.64rem;color:var(--ov-mute)}
+.stats i{display:block;height:5px;border-radius:3px;background:rgba(255,255,255,.16);align-self:center;position:relative;overflow:hidden}
+.stats i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--star)}
+.btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:2px}
+.btns button{font:inherit;font-weight:800;font-size:.95rem;padding:10px 20px;border-radius:999px;border:0;background:var(--star);color:#1B2A30;cursor:pointer}
+.row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row2 button{font:inherit;font-size:.84rem;font-weight:700;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
+.row2 .hint{font-size:.8rem;color:var(--mute);flex:1 1 220px;min-width:0}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+body.big{overflow:hidden}
+body.big .wrap{position:fixed;inset:0;max-width:none;margin:0;z-index:50;background:#000;gap:0;touch-action:none;padding:0}
+body.big .wrap>header, body.big .row2{display:none}
+body.big .stage{flex:1 1 auto;aspect-ratio:auto;min-height:0;height:auto;border-radius:0}
+body.big.rot .wrap{inset:auto;left:50%;top:50%;width:100vh;width:100dvh;height:100vw;height:100dvw;transform:translate(-50%,-50%) rotate(90deg)}
+@media (max-width:620px),(orientation:landscape) and (max-height:520px){ body.m:not(.big) .stage{aspect-ratio:auto;min-height:0} body.m:not(.big) .ov{position:relative} }
+body:not(.touch) .tip{display:none}
+#hT{left:50%;transform:translateX(-50%);top:8px;background:rgba(14,26,31,.5);border-radius:10px;padding:4px 12px;text-align:center;min-width:170px}
+#hT .bar{height:7px;border-radius:4px;background:rgba(255,255,255,.25);overflow:hidden;margin:3px 0 1px} #hT .bar i{display:block;height:100%;background:#F0705A}
+#aim{position:absolute;left:50%;top:44%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid rgba(255,255,255,.7);border-radius:50%;pointer-events:none}
+#aim.lock{border-color:#FF4030;box-shadow:0 0 0 2px rgba(255,64,48,.35)}
+#tag{position:absolute;pointer-events:none;color:#fff;font-weight:800;font-size:.72rem;text-shadow:0 1px 3px rgba(0,0,0,.7);transform:translate(-50%,-100%);white-space:nowrap}
+#tag.off{font-size:1.5rem;color:#FF4030}
+.fb{position:absolute;right:14px;font:inherit;font-weight:800;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(200,60,40,.55);color:#fff;z-index:4;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#bFire{bottom:96px;width:78px;height:78px;font-size:.8rem} #bDash{bottom:184px;width:58px;height:58px;font-size:.66rem;background:rgba(40,120,200,.55);right:24px}
+.fb.cd{opacity:.4}
+body:not(.touch) .fb{display:none}
+.link{font-size:.82rem;background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;word-break:break-all;user-select:all;-webkit-user-select:all;color:#fff}
+.btns button.sec{background:transparent;color:var(--ov-fg);border:1px solid rgba(255,255,255,.5)}
+.code{font-family:var(--f-head);font-size:1.5rem;letter-spacing:.1em;color:var(--star)}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><p class="eyebrow">Поле зору · гра · етап 3 — гвинти, дроти, дощ</p><h1>Дрони над фермою</h1></header>
+  <div class="stage" id="stage">
+    <canvas id="c" aria-label="Тривимірна ферма, вид із-за дрона"></canvas>
+    <div class="hud" id="hL"></div><canvas id="map" width="150" height="150"></canvas><div class="hud" id="hT" hidden></div><div class="hud" id="hMsg"></div><div id="hit"></div><div id="aim" hidden></div><div id="tag" hidden></div>
+    <button id="bDash" class="fb" hidden>РИВОК</button><button id="bFire" class="fb" hidden>ВОГОНЬ</button>
+    <div class="tip" id="tipL">ліва рука: летіти</div><div class="tip" id="tipR">права рука: поворот і висота</div>
+    <button id="bExit" class="sb" hidden>✕ Згорнути</button><button id="bHome" class="sb" hidden>На старт ⟲</button>
+    <div class="stick" id="sL" hidden><i></i></div><div class="stick" id="sR" hidden><i></i></div>
+    <div class="ov" id="ov"><div class="card" id="card"></div></div>
+  </div>
+  <div class="row2">
+    <button id="bBig">⛶ На весь екран</button><button id="bSnd" aria-pressed="true">Звук: увімк.</button><button id="bMenu" hidden>Змінити дрон</button>
+    <span class="hint">На комп'ютері: W A S D — летіти, ← → — поворот, ↑ ↓ — висота, F або клац мишею — вогонь, C — ривок (Оса), R — на старт. На телефоні: лівий палець веде дрон, правий повертає і міняє висоту; стріляє сам, коли приціл червоний.</span>
+  </div>
+</div>
