@@ -3,10 +3,10 @@ window.buildWorld=function(THREE){
 "use strict";
 const P=[],Nn=[],C=[], cols=[], zones=[], pads=[], marks=[], fields=[], foot=[];
 const col=new THREE.Color(), v=new THREE.Vector3(), n=new THREE.Vector3(), m4=new THREE.Matrix4(), n3=new THREE.Matrix3(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3();
-const UB=new THREE.BoxGeometry(1,1,1).toNonIndexed(), UC={};
+const UB=new THREE.BoxGeometry(1,1,1).toNonIndexed(), UC={}; let LUM=1;   /* LUM>1 — світліші поверхні всередині будівель */
 function ucyl(seg){ return UC[seg]||(UC[seg]=new THREE.CylinderGeometry(1,1,1,seg).toNonIndexed()); }
 function push(geom,mat,c){ const pa=geom.attributes.position, na=geom.attributes.normal; n3.getNormalMatrix(mat); col.set(c);
-  for(let i=0;i<pa.count;i++){ v.fromBufferAttribute(pa,i).applyMatrix4(mat); n.fromBufferAttribute(na,i).applyMatrix3(n3).normalize(); P.push(v.x,v.y,v.z); Nn.push(n.x,n.y,n.z); C.push(col.r,col.g,col.b); } }
+  for(let i=0;i<pa.count;i++){ v.fromBufferAttribute(pa,i).applyMatrix4(mat); n.fromBufferAttribute(na,i).applyMatrix3(n3).normalize(); P.push(v.x,v.y,v.z); Nn.push(n.x,n.y,n.z); C.push(col.r*LUM,col.g*LUM,col.b*LUM); } }
 function box(x0,y0,z0,x1,y1,z1,c,solid){ if(x1<x0){const t=x0;x0=x1;x1=t;} if(z1<z0){const t=z0;z0=z1;z1=t;} m4.makeScale(x1-x0,y1-y0,z1-z0); m4.setPosition((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); push(UB,m4,c); if(solid!==false) cols.push([x0,y0,z0,x1,y1,z1]); }
 function cyl(x,z,r,y0,y1,c,solid,seg){ m4.makeScale(r,y1-y0,r); m4.setPosition(x,(y0+y1)/2,z); push(ucyl(seg||12),m4,c); if(solid!==false) cols.push({x:x,z:z,r:r,y0:y0,y1:y1}); }
 function cylH(x,y,z,r,len,axis,c,seg){ q.setFromAxisAngle(axis==='x'?new THREE.Vector3(0,0,1):new THREE.Vector3(1,0,0),Math.PI/2); m4.compose(ps.set(x,y,z),q,sc.set(r,len,r)); push(ucyl(seg||10),m4,c); }
@@ -35,8 +35,9 @@ function veh(x,z,dir){ const T=(lx,lz)=>dir===0?[x+lx,z+lz]:dir===1?[x-lz,z+lx]:
   return b; }
 
 /* ---------- земля, двір, дороги ---------- */
-box(-320,-1,-320,320,0,320,'#6E9A4E',false);
-box(-95,0,-80,95,.04,75,'#A99E86',false);                 /* двір — гравій */
+const PIT=[-44.3,-15.7,-24.3,-.35];   /* яма під лабіринт: підвал і приямок */
+(function(){ const g=(x0,z0,x1,z1,ya,yb,c)=>{ box(x0,ya,z0,PIT[0],yb,z1,c,false); box(PIT[1],ya,z0,x1,yb,z1,c,false); box(PIT[0],ya,z0,PIT[1],yb,PIT[2],c,false); box(PIT[0],ya,PIT[3],PIT[1],yb,z1,c,false); }; g(-320,-320,320,320,-1,0,'#6E9A4E'); g(-95,-80,95,75,0,.04,'#A99E86'); })();
+function floorAt(x,z){ return (x>-44.15&&x<-15.85&&z>-24.15&&z<-.5)?-3.2:0; }                 /* двір — гравій */
 box(-210,0,56,210,.06,64,'#9C9485',false); box(-4,0,0,4,.07,56,'#9C9485',false);
 
 /* ---------- поля кукурудзи ---------- */
@@ -170,8 +171,87 @@ for(const pp of [[54,17],[64,17],[54,31],[64,31]]) box(pp[0]-.1,0,pp[1]-.1,pp[0]
 /* зерно: труба в проїзді, викид із вежі на купу, шнек комбайна */
 grain(-55,-34,.45,2.4,3.7,0); cylH(-15.5,12.4,-50,.35,5,'x','#7C8288',8); grain(-13,-50,.6,1.2,12.3,3.2); grain(5.6,-22.75,.4,.5,4.9,1.6);
 
+/* ---------- етап 5: лабіринт (підвал, два поверхи, горище) і склад ---------- */
+function slabH(x0,x1,z0,z1,y,t,c,holes){ const xs=[x0,x1], zs=[z0,z1]; for(const h of holes){ xs.push(h[0],h[1]); zs.push(h[2],h[3]); } xs.sort((a,b)=>a-b); zs.sort((a,b)=>a-b);
+  for(let j=0;j<zs.length-1;j++){ const e=zs[j], f=zs[j+1]; if(f-e<.02) continue; let run=null; for(let i=0;i<xs.length-1;i++){ const a=xs[i], b=xs[i+1]; if(b-a<.02) continue; const cx=(a+b)/2, cz=(e+f)/2, hole=holes.some(h=>cx>h[0]&&cx<h[1]&&cz>h[2]&&cz<h[3]); if(hole){ if(run){ box(run[0],y,e,run[1],y+t,f,c); run=null; } } else { if(run) run[1]=b; else run=[a,b]; } } if(run) box(run[0],y,e,run[1],y+t,f,c); } }
+function roofH(x0,x1,z0,z1,y,h,c,cg,win){ const o=.5, zm=(z0+z1)/2, half=(z1-z0)/2, N=6;
+  quad(V3(x0-o,y,z0-o),V3(x1+o,y,z0-o),V3(x1+o,y+h,zm),V3(x0-o,y+h,zm),c); quad(V3(x1+o,y,z1+o),V3(x0-o,y,z1+o),V3(x0-o,y+h,zm),V3(x1+o,y+h,zm),c);
+  for(let i=0;i<N;i++){ const k0=half*i/N, k1=half*(i+1)/N, ya=y+h*i/N-.1, yb=y+h*(i+1)/N+.15; cols.push([x0-o,ya,z0+k0-(i?0:o),x1+o,yb,z0+k1]); cols.push([x0-o,ya,z1-k1,x1+o,yb,z1-k0+(i?0:o)]); }
+  for(const gx of [x0,x1]){ const w=win?win[0]:0, a=win?win[1]:0, b=win?win[2]:0, yr=z=>y+h*(1-Math.abs(z-zm)/half), Gp=(z,yy)=>V3(gx,yy,z);
+    if(!win) tri(Gp(z0,y),Gp(zm,y+h),Gp(z1,y),cg);
+    else { tri(Gp(z0,y),Gp(zm-w,yr(zm-w)),Gp(zm-w,y),cg); tri(Gp(zm+w,y),Gp(zm+w,yr(zm+w)),Gp(z1,y),cg); quad(Gp(zm-w,y),Gp(zm+w,y),Gp(zm+w,y+a),Gp(zm-w,y+a),cg); quad(Gp(zm-w,y+b),Gp(zm+w,y+b),Gp(zm+w,yr(zm+w)),Gp(zm-w,yr(zm-w)),cg); tri(Gp(zm-w,yr(zm-w)),Gp(zm+w,yr(zm+w)),Gp(zm,y+h),cg); }
+    for(let i=0;i<N;i++){ const k=half*(i+.5)/N, ya=y+h*i/N, yb=y+h*(i+1)/N, za=z0+k, zb=z1-k; if(zb-za<.05) continue; if(win&&yb>y+a+.01&&ya<y+b-.01){ if(zm-w-za>.05) cols.push([gx-.15,ya,za,gx+.15,yb,zm-w]); if(zb-(zm+w)>.05) cols.push([gx-.15,ya,zm+w,gx+.15,yb,zb]); } else cols.push([gx-.15,ya,za,gx+.15,yb,zb]); } } }
+(function(){ const x0=-44,x1=-16,z0=-24,z1=-4,B=-3.2,cw='#9B6B4E',ci='#CFC6B4',cs='#8E8A7E',cb='#7A7F84',D=2.4; zone('Лабіринт',x0,z0,x1,z1,11.5); LUM=1.7;
+  const SH=[-31,-28.6,-15.2,-12.8];
+  function shaft(ya,yb,open){ const a=SH[0], b=SH[1], e=SH[2], f=SH[3], hz=[[e+.35,f-.35,ya,yb-.5]], hx=[[a+.35,b-.35,ya,yb-.5]]; wall('z',a,e,f,ya,yb,ci,open==='w'?hz:null,.15); wall('z',b,e,f,ya,yb,ci,open==='e'?hz:null,.15); wall('x',e,a,b,ya,yb,ci,open==='n'?hx:null,.15); wall('x',f,a,b,ya,yb,ci,open==='s'?hx:null,.15); }
+  /* підвал і приямок */
+  LUM=1; box(x0-.3,B-.3,z0-.3,x1+.3,B,-.2,'#8E9498'); LUM=1.7;
+  box(x0-.3,B,z0-.3,x0+.15,0,z1,cb); box(x1-.15,B,z0-.3,x1+.3,0,z1,cb); box(x0-.3,B,z0-.3,x1+.3,0,z0+.15,cb);
+  wall('x',z1,x0,x1,B,-.3,cb,[[-41,-39,B,-.9],[-31,-29,B,-.9],[-21,-19,B,-.9]]);
+  box(x0-.3,B,-.5,x1+.3,0,-.2,cs); box(x0-.3,B,z1,x0,0,-.5,cs); box(x1,B,z1,x1+.3,0,-.5,cs);
+  rope([x0,.9,-.3],[x1,.9,-.3]); for(let x=x0;x<=x1;x+=4) box(x-.05,0,-.35,x+.05,.9,-.25,'#2A2F32',false);
+  for(const px of [-38,-24]) for(const pz of [-19,-8]) box(px-.25,B,pz-.25,px+.25,-.3,pz+.25,'#8E8A7E');
+  wall('z',-30,z0,-15.2,B,-.3,cb,[[-21,-19,B,-1]],.25); wall('x',-12,x0,-36,B,-.3,cb,[[-41,-39,B,-1]],.25);
+  box(x0+.2,-1.3,-14.2,-31.2,-1,-13.9,'#B5793F'); box(-22.2,-1.2,z0+.2,-21.9,-.9,z1-.2,'#B5793F'); cyl(-40,-20.5,1,B,-1.1,'#C9503A',true,10);
+  box(-27,B,-23.6,-25.4,-2.2,-22.4,'#8A6A44'); box(-35.5,B,-6,-34,-2.4,-4.6,'#8A6A44'); cyl(-18,-14,.45,B,-2,'#3F5F8A',true,8);
+  rope([-34,-.3,-7.5],[-34,-1.7,-7.5]); rope([-24,-.3,-17],[-24,-1.7,-17]); rope([-41,-.3,-16],[-41,-1.6,-16]);
+  shaft(B,-.3,'s');
+  /* перекриття: шахта крізь усі поверхи й отвори сходів */
+  LUM=1; slabH(x0,x1,z0,z1,-.3,.3,'#B79A6B',[SH,[-42,-39,-22,-19],[-21,-18,-9,-6]]);
+  slabH(x0,x1,z0,z1,3.2,.3,'#A9895C',[SH,[-42,-39,-9,-6],[-21,-18,-22,-19]]);
+  slabH(x0,x1,z0,z1,6.7,.3,cs,[SH,[-40,-37,-22,-19]]); LUM=1.7;
+  /* перший поверх: зовнішні стіни (4 двері) і лабіринт кімнат */
+  LUM=1; wall('z',x0,z0,z1,0,3.2,cw,[[-16,-13.6,0,2.6],[-8.5,-6.5,1,2.4],[-22,-20,1,2.4]]); LUM=1.7;
+  LUM=1; wall('z',x1,z0,z1,0,3.2,cw,[[-15.4,-13,0,2.6],[-21,-19,1,2.4],[-7.5,-5.5,1,2.4]]); LUM=1.7;
+  LUM=1; wall('x',z0,x0,x1,0,3.2,cw,[[-41,-38.6,0,2.6],[-22,-19.6,0,2.6],[-34.5,-32.5,1,2.4],[-27.5,-25.5,1,2.4]]); LUM=1.7;
+  LUM=1; wall('x',z1,x0,x1,0,3.2,cw,[[-40,-38,1,2.4],[-30,-28,.8,2.6],[-21,-19,1,2.4]]); LUM=1.7;
+  wall('x',-17,x0,x1,0,3.2,ci,[[-42,-40,0,D],[-35,-33,0,D],[-26,-24,0,D],[-19,-17,0,D]],.2);
+  wall('x',-11,x0,x1,0,3.2,ci,[[-40,-38,0,D],[-27.5,-25.5,0,D],[-22,-20,0,D]],.2);
+  wall('z',-37,z0,-17,0,3.2,ci,null,.2); wall('z',-30,z0,-17,0,3.2,ci,[[-22,-20,0,D]],.2); wall('z',-23,z0,-17,0,3.2,ci,null,.2);
+  wall('z',-36,-11,z1,0,3.2,ci,[[-8.5,-6.5,0,D]],.2); wall('z',-26,-11,z1,0,3.2,ci,null,.2);
+  wall('z',-39.5,-17,-13.6,0,3.2,ci,null,.2); wall('z',-22,-14.4,-11,0,3.2,ci,null,.2); shaft(0,3.2,'e');
+  box(-34.15,2.2,-16.9,-33.85,2.45,-11.1,'#B5793F'); box(-43.5,0,-10.5,-42.3,1.1,-9.3,'#8A6A44'); box(-32.5,0,-8.5,-30.5,.85,-7.2,'#7A5A3A'); cyl(-17.3,-23,.45,0,1.2,'#3F5F8A',true,8); box(-29.2,0,-23.6,-27.8,1.4,-22.6,'#8A6A44');
+  for(const r of [[-33.5,-20.5],[-26.5,-20.5],[-31,-7.5],[-21,-7.5],[-25.5,-14]]) rope([r[0],3.2,r[1]],[r[0],2.3,r[1]]);
+  /* другий поверх */
+  LUM=1; wall('z',x0,z0,z1,3.2,6.7,cw,[[-21,-19,4.4,5.9],[-8.5,-6.5,4.4,5.9]]); LUM=1.7;
+  LUM=1; wall('z',x1,z0,z1,3.2,6.7,cw,[[-15.4,-13,3.5,6.1],[-21.5,-19.5,4.4,5.9],[-8,-6,4.4,5.9]]); LUM=1.7;
+  LUM=1; wall('x',z0,x0,x1,3.2,6.7,cw,[[-40,-38,4.4,5.9],[-31,-29,4.4,5.9],[-22,-20,4.4,5.9]]); LUM=1.7;
+  LUM=1; wall('x',z1,x0,x1,3.2,6.7,cw,[[-38,-36,4.4,5.9],[-29,-27,4.4,5.9],[-20,-18,4.4,5.9]]); LUM=1.7;
+  LUM=1; box(-16,3.2,-16.4,-13.4,3.5,-12,cs); LUM=1.7; rope([-13.5,4.4,-16.3],[-13.5,4.4,-12.1]);
+  wall('z',-34,z0,z1,3.5,6.7,'#BFD0D6',[[-21,-19,3.5,5.9],[-9,-7,3.5,5.9]],.2);
+  wall('z',-25,z0,z1,3.5,6.7,'#BFD0D6',[[-23.5,-21.5,3.5,5.9],[-15,-13,3.5,5.9],[-8,-6,3.5,5.9]],.2);
+  wall('x',-14,x0,-34,3.5,6.7,'#BFD0D6',[[-40,-38,3.5,5.9]],.2); wall('x',-18,-25,x1,3.5,6.7,'#BFD0D6',null,.2); wall('x',-10,-25,x1,3.5,6.7,'#BFD0D6',[[-22,-20,3.5,5.9]],.2); shaft(3.5,6.7,'w');
+  box(-33.8,5.6,-18.1,-25.2,5.85,-17.8,'#B5793F'); box(-33.6,3.5,-6,-32.4,5.2,-4.4,'#7A5A3A'); box(-27,3.5,-23.5,-25.4,4.5,-22,'#8A6A44'); box(-43.6,3.5,-17.5,-42.4,4.4,-15,'#7A5A3A');
+  for(const r of [[-29.5,-21],[-29.5,-8],[-39,-19],[-20,-14]]) rope([r[0],6.7,r[1]],[r[0],5.8,r[1]]);
+  /* горище */
+  roofH(x0,x1,z0,z1,7,4,'#5E4A3E',cw,[1.2,.667,2]);
+  for(const x of [-36.5,-26,-19.5]){ box(x-.12,8.5,z0+4.2,x+.12,8.75,z1-4.2,'#7A5A3A'); box(x-.1,8.75,-14.1,x+.1,10.9,-13.9,'#7A5A3A'); }
+  box(-24.6,7,-9.6,-23.4,11.6,-8.4,'#8C4A3A'); box(-42,7,-18,-40.5,8,-16.5,'#8A6A44'); box(-21,7,-20,-19.6,7.9,-18.8,'#8A6A44'); rope([-42,8.1,-12.5],[-33,8.1,-12.5]);
+  pads.push({x:-20,y:B+.08,z:-20,n:'підвал лабіринту'},{x:-22,y:7.08,z:-12,n:'горище лабіринту'}); LUM=1;
+})();
+(function(){ const x0=72,x1=92,z0=-24,z1=0,c='#7F8C6E',H=8; zone('Склад',x0,z0,x1,z1,11);
+  wall('x',z1,x0,x1,0,H,c,[[79,85,0,5]]); wall('x',z0,x0,x1,0,H,c,[[79,85,0,5]]);
+  wall('z',x0,z0,z1,0,H,c,[[-13,-11,0,2.6],[-20,-18,5.2,6.8],[-6,-4,5.2,6.8]]); wall('z',x1,z0,z1,0,H,c,[[-21,-18,5,7],[-13.5,-10.5,5,7],[-6,-3,5,7]]);
+  roofH(x0,x1,z0,z1,H,3.2,'#5E6368',c,[1.3,.533,1.6]);
+  box(x0,4,z0,78,4.3,z1,'#8A6A44'); for(const z of [-22,-12,-2]) box(77.7,0,z-.15,78,4,z+.15,'#6E7378'); rope([78,5.2,z0+.3],[78,5.2,z1-.3]);
+  for(const rx of [86.4,89.8]){ for(let z=-22;z<=-2;z+=4) box(rx,0,z-.08,rx+1.2,5,z+.08,'#3F5F8A'); for(const y of [1.6,3.2,4.8]) box(rx,y,-22,rx+1.2,y+.12,-2,'#C9A961'); }
+  for(const q of [[86.6,1.72,-20,'#8A6A44'],[86.6,3.32,-9,'#9A5A3C'],[90,1.72,-14,'#8A6A44'],[90,0,-5.5,'#9A5A3C'],[86.6,0,-16,'#8A6A44']]) box(q[0],q[1],q[2],q[0]+.9,q[1]+.9,q[2]+1.2,q[3]);
+  for(const x of [76,82,88]) box(x-.12,8,z0,x+.12,8.25,z1,'#6E7378');
+  rope([82,8,-18],[82,6,-18]); rope([82,8,-6],[82,6,-6]); rope([82,8,-12],[82,3,-12]); box(81.7,2.6,-12.3,82.3,3,-11.7,'#2A2F32');
+  box(73,0,-23,75.5,1.2,-21,'#8A6A44'); box(73,0,-3.2,74.6,1.6,-1.2,'#9A5A3C'); box(74,4.3,-9,75.4,5.3,-7.6,'#8A6A44');
+  pads.push({x:75,y:4.38,z:-20,n:'антресоль складу'}); LUM=1;
+})();
+/* більше перешкод у старих будівлях і зарядки всередині */
+for(const x of [28,38,48,58]){ const z=x%20===8?-54.6:-51.4; rope([x,5,z],[x,3.5,z]); box(x-.3,3,z-.3,x+.3,3.5,z+.3,'#C9CED2'); }
+box(34.88,3.5,30.3,35.12,3.8,41.7,'#7A5A3A'); box(44.88,3.5,30.3,45.12,3.8,41.7,'#7A5A3A'); box(39.88,7.6,30.3,40.12,7.9,41.7,'#7A5A3A');
+for(const z of [-21,-10,-1,5]) rope([56,5.5,z],[56,2.8,z]);
+rope([-46.5,5,33],[-46.5,3.2,33]); rope([-57,5,27],[-57,3.4,27]); box(-50.8,0,33.5,-50.2,2,35.6,'#8A6A44');
+rope([-67,3,-7],[-67,2.2,-7]); rope([-61,6.2,-9.5],[-61,5.3,-9.5]);
+rope([-64,7,-36],[-64,4.2,-36]); rope([-46,7,-32],[-46,4.6,-32]);
+pads.push({x:24.5,y:.08,z:-53,n:'корівник'},{x:46.5,y:4.88,z:36,n:'сінник, другий ярус'});
+
 /* ---------- мітки для обльоту ---------- */
-marks.push([-22,15,-50],[-55,20.5,-50],[-48,21.5,-50.2],[45,2.4,-53],[8,1.9,10],[-61,4.6,-9.5],[-67,1.5,-5],[42,6.6,36],[-46.5,2,31],[-10,10,30],[0,1.3,-120],[62,2.6,-12],[0,45,10],[-46,4.2,-34]);
+marks.push([-22,15,-50],[-55,20.5,-50],[-48,21.5,-50.2],[45,2.4,-53],[8,1.9,10],[-61,4.6,-9.5],[-67,1.5,-5],[42,6.6,36],[-46.5,2,31],[-10,10,30],[0,1.3,-120],[62,2.6,-12],[0,45,10],[-46,4.2,-34],[-24,-1.8,-20],[-33.5,1.6,-20.5],[-20,5,-7],[-40,8.3,-11],[75,5.6,-4]);
 pads.push({x:0,y:.08,z:36,n:'двір'},{x:76,y:.08,z:-52,n:'за корівником'});
 
 const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setAttribute('normal',new THREE.Float32BufferAttribute(Nn,3)); g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
@@ -185,5 +265,5 @@ function near(x,z,out){ out.length=0; const i=Math.floor(x/CELL), j=Math.floor(z
 function inside(x,y,z,pad){ const l=near(x,z,[]); for(const idx of l){ const c=cols[idx]; if(c.r){ if(y>c.y0-pad&&y<c.y1+pad&&Math.hypot(x-c.x,z-c.z)<c.r+pad) return true; } else if(x>c[0]-pad&&x<c[3]+pad&&y>c[1]-pad&&y<c[4]+pad&&z>c[2]-pad&&z<c[5]+pad) return true; } return false; }
 function zoneAt(x,y,z){ for(const zz of zones) if(x>zz.x0&&x<zz.x1&&z>zz.z0&&z<zz.z1&&y<zz.h) return zz; return null; }
 function inCorn(x,y,z){ if(y>2.5) return false; for(const f of fields) if(x>f.x0&&x<f.x1&&z>f.z0&&z<f.z1){ const t=f.along==='x'?z-f.z0:x-f.x0, m=((t-1)%2+2)%2; return m<.4||m>1.6; } return false; }
-return {mesh:mesh,cols:cols,near:near,inside:inside,zones:zones,zoneAt:zoneAt,inCorn:inCorn,pads:pads,marks:marks,foot:foot,fields:fields,haz:haz,extra:extra,verts:P.length/3,LIM:205};
+return {mesh:mesh,cols:cols,near:near,inside:inside,zones:zones,zoneAt:zoneAt,inCorn:inCorn,pads:pads,marks:marks,foot:foot,fields:fields,haz:haz,extra:extra,floorAt:floorAt,verts:P.length/3,LIM:205};
 };
