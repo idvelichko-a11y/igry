@@ -132,12 +132,16 @@ function ramCheck(dt){ if(!foe||foe.dead||me.dead) return; const dmg=ramOf(me,fo
 function botRam(){ if(G.kind!=='bot'||foe.dead||me.dead) return; const dmg=ramOf(foe,me); if(dmg>0){ foe.cd=1.2; hurt(me,dmg,'ram'); say('Тебе протаранили!',1.5); foe.v.multiplyScalar(-.4); } }
 
 /* ---------- комп'ютер ---------- */
-const botS=[{t:0,ty:20,err:0,sd:1,st:0},{t:0,ty:20,err:0,sd:-1,st:0}];
+const botS=[{t:0,ty:20,err:0,sd:1,st:0,los:true,wall:false,stuck:0,esc:0},{t:0,ty:20,err:0,sd:-1,st:0,los:true,wall:false,stuck:0,esc:0}];
 function botThink(d,tg,bs,dt){ const p=DR[d.ch], inp=d.inp; if(d.dead||tg.dead){ inp.mx=inp.my=inp.yaw=0; inp.alt=d.dead?0:.2; inp.fire=inp.dash=false; d.lockT=0; return; }
   tA.copy(tg.p).sub(d.p); const hd=Math.hypot(tA.x,tA.z), want=[7,15,0,28][d.ch]; bs.t-=dt; bs.st-=dt; if(bs.st<=0){ bs.st=2+Math.random()*3; bs.sd=-bs.sd; }
-  if(bs.t<=0){ bs.t=.25; bs.err=(Math.random()-.5)*(1-G.botSkill)*.9; bs.ty=hd>45?Math.max(tg.p.y+4,24):Math.min(tg.p.y+[1,3,0,5][d.ch],Math.max(22,tg.p.y)); if(tg.indoor&&hd<40) bs.ty=Math.max(tg.p.y,d.ch===3?14:10); }
+  if(bs.t<=0){ bs.t=.25; bs.err=(Math.random()-.5)*(1-G.botSkill)*.9; bs.ty=hd>45?Math.max(tg.p.y+4,24):Math.min(tg.p.y+[1,3,0,5][d.ch],Math.max(22,tg.p.y)); if(tg.indoor&&hd<40) bs.ty=Math.max(tg.p.y,d.ch===3?14:10);
+    bs.los=!blocked(d.p,tg.p); if(!bs.los&&!(tg.indoor&&hd<14)) bs.ty=Math.max(bs.ty,27); const fx0=-Math.sin(d.yaw), fz0=-Math.cos(d.yaw); bs.wall=false; for(let q=2;q<=8;q+=2) if(W.inside(d.p.x+fx0*q,d.p.y,d.p.z+fz0*q,.5)){ bs.wall=true; break; }
+    if(hd>want+6&&Math.hypot(d.v.x,d.v.z)<1.2){ bs.stuck+=.25; if(bs.stuck>1.2){ bs.esc=1.6; bs.sd=-bs.sd; bs.stuck=0; } } else bs.stuck=0; }
+  if(bs.esc>0) bs.esc-=dt;
   let da=Math.atan2(-tA.x,-tA.z)+bs.err-d.yaw; da=Math.atan2(Math.sin(da),Math.cos(da)); inp.yaw=clamp(-da*2.2,-1,1);
   const fwd=Math.abs(da)<.9?clamp((hd-want)/8,-1,1):0; inp.my=fwd*(d.ch===2?1:.85); inp.mx=d.ch===2?(hd>11?Math.sin(G.t*2.6)*.75:0):(hd<want*2.2?bs.sd*[.8,.65,0,.4][d.ch]:Math.sin(G.t*.7+d.ch)*.3); inp.alt=clamp((Math.min(bs.ty,p.ceil*.9)-d.p.y)*.5,-1,1);
+  if(bs.wall){ inp.alt=1; inp.my=Math.min(inp.my,.15); } if(bs.esc>0){ inp.mx=bs.sd; inp.my=-.5; inp.alt=1; }
   if(d.batt<.2) inp.my*=.4; inp.dash=d.ch===2&&hd<15&&Math.abs(da)<.3;
   aimOf(d,tg,tB); d.lockT=d.lock?d.lockT+dt:0; inp.fire=d.lockT>.25+(1-G.botSkill)*.7;
   if(inp.fire&&d.cd<=0&&d.ch!==2&&G.phase==='fight'){ const e=(1-G.botSkill)*.09; tB.x+=(Math.random()-.5)*e; tB.y+=(Math.random()-.5)*e; tB.z+=(Math.random()-.5)*e; fire(d,tg,false,tB.clone().normalize()); } }
