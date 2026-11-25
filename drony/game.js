@@ -11,9 +11,9 @@ const Q=new URLSearchParams(location.search), isLoc=/^(localhost|127\.0\.0\.1)$/
 const DR=[
  {n:'Шершень',w:'дріб',wd:'Дріб віялом: що ближче, то болючіше.',m:1.6,twr:2.6,tilt:35,rate:220,yaw:150,cda:.0715,vUp:6,vDn:5,ceil:60,hov:200,loud:.85,hz:150,pt:1,col:0xD2A63C,rng:30,cdn:.75,d:'Середній у всьому. Слухняний, добре тримає вітер.'},
  {n:'Павук',w:'сітка',wd:'Сітка обплутує: ворог падає, не стріляє і перегріває мотори.',m:.9,twr:2.4,tilt:40,rate:200,yaw:140,cda:.07,vUp:5,vDn:4.5,ceil:90,hov:240,loud:.35,hz:170,pt:.6,col:0x7FB069,rng:26,cdn:3.6,d:'Легкий і тихий, довго тримає заряд. Вітер зносить найсильніше, гвинти найніжніші.'},
- {n:'Оса',w:'таран',wd:'Гарпун чіпляє ворога до 25 м і підтягує тебе до нього. Ривок сам доводить на ціль із 35 м. Шкода — від удару списом.',m:1,twr:3.9,tilt:48,rate:432,yaw:264,cda:.026,vUp:9.6,vDn:8.4,ceil:35,hov:130,loud:.6,hz:195,pt:.8,col:0xC9503A,rng:25,cdn:1.2,d:'Найшвидша і найверткіша. Низька стеля, заряд тане на очах.'},
- {n:'Джміль',w:'гармата',wd:'Рідкий потужний постріл із вибухом. Ближче 6 м снаряд не встигає звестися.',m:3.2,twr:1.9,tilt:18,rate:110,yaw:90,cda:.1,vUp:3.5,vDn:4,ceil:120,hov:170,loud:1,hz:95,pt:1.6,col:0x3F5F8A,rng:50,cdn:3,d:'Важкий і міцний: шкода по ньому на чверть менша. Розганяється довго, зате вітер йому байдужий і стеля найвища.'},
- {n:'Бабка',w:'снайпер',wd:'Оптичний приціл із наближенням ×4 і ×8: наводиш сам і тиснеш «Вогонь» — промінь долітає миттю. Перезаряд довгий. Червоний промінь прицілу бачать усі.',m:.8,twr:2.5,tilt:32,rate:180,yaw:130,cda:.06,vUp:5.5,vDn:5,ceil:140,hov:220,loud:.45,hz:210,pt:.5,col:0x8E6BBF,rng:110,cdn:5,d:'Тендітна: шкода по ній на третину більша, гвинти найніжніші. Зате б\'є найдалі й літає найвище.'},
+ {n:'Оса',w:'таран',wd:'Гарпун чіпляє ворога до 25 м і підтягує тебе до нього. Ривок сам доводить на ціль із 35 м. Шкода — від удару списом.',m:1,twr:3.9,tilt:48,rate:432,yaw:264,cda:.026,vUp:9.6,vDn:8.4,ceil:35,hov:130,loud:.6,hz:195,pt:.8,col:0xC9503A,rng:25,cdn:1.2,d:'Найшвидша і найверткіша. Заряд тане на очах.'},
+ {n:'Джміль',w:'гармата',wd:'Рідкий потужний постріл із вибухом. Ближче 6 м снаряд не встигає звестися.',m:3.2,twr:1.9,tilt:18,rate:110,yaw:90,cda:.1,vUp:3.5,vDn:4,ceil:120,hov:170,loud:1,hz:95,pt:1.6,col:0x3F5F8A,rng:50,cdn:3,d:'Важкий і міцний: шкода по ньому на чверть менша. Розганяється довго, зате вітер йому байдужий.'},
+ {n:'Бабка',w:'снайпер',wd:'Оптичний приціл із наближенням ×4 і ×8: наводиш сам і тиснеш «Вогонь» — промінь долітає миттю. Перезаряд довгий. Червоний промінь прицілу бачать усі.',m:.8,twr:2.5,tilt:32,rate:180,yaw:130,cda:.06,vUp:5.5,vDn:5,ceil:140,hov:220,loud:.45,hz:210,pt:.5,col:0x8E6BBF,rng:110,cdn:5,d:'Тендітна: шкода по ній на третину більша, гвинти найніжніші. Зате б\'є найдалі.'},
 ];
 DR.forEach(p=>{ p.vmax=Math.sqrt(2*p.m*GR*Math.tan(p.tilt*RAD)/(RHO*p.cda)); });
 let myCh=0; try{const v=+localStorage.getItem('pz_dr_ch'); if(v>=0&&v<5) myCh=v;}catch(e){}
@@ -24,7 +24,8 @@ try{ renderer=new THREE.WebGLRenderer({canvas:cv,antialias:!coarse,powerPreferen
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0xBFDDEB); scene.fog=new THREE.Fog(0xBFDDEB,160,560);
 const cam=new THREE.PerspectiveCamera(70,16/9,.12,800);
 scene.add(new THREE.HemisphereLight(0xdfeeff,0x55603f,.62)); const sun=new THREE.DirectionalLight(0xfff2d0,.5); sun.position.set(60,120,40); scene.add(sun);
-const W=buildWorld(THREE); scene.add(W.mesh); W.extra.forEach(o=>scene.add(o)); const grainM=W.extra.filter(o=>o.userData.grain);
+const W=buildWorld(THREE); scene.add(W.mesh);
+const TOPY=Math.max(...W.cols.map(c=>c.r?c.y1:c[4]))+2;   /* стеля для всіх: найвища будівля + 2 м */ W.extra.forEach(o=>scene.add(o)); const grainM=W.extra.filter(o=>o.userData.grain);
 const RN=coarse?260:420, rainP=new Float32Array(RN*6), rainG=new THREE.BufferGeometry(); for(let i=0;i<RN;i++){ const x=(Math.random()-.5)*44, y=Math.random()*26-8, z=(Math.random()-.5)*44; rainP.set([x,y,z,x+.12,y-1.1,z],i*6); } rainG.setAttribute('position',new THREE.BufferAttribute(rainP,3));
 const rainM=new THREE.LineSegments(rainG,new THREE.LineBasicMaterial({color:0xDCEBF5,transparent:true,opacity:.55})); rainM.frustumCulled=false; rainM.visible=false; scene.add(rainM); const SKY0=new THREE.Color(0xBFDDEB), SKY1=new THREE.Color(0x7F8E96); let wet=0;
 W.pads.forEach(p=>{ const m=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,.08,20),new THREE.MeshBasicMaterial({color:0x35C6D8})); m.position.set(p.x,p.y+.05,p.z); scene.add(m); const r=new THREE.Mesh(new THREE.TorusGeometry(1.6,.07,6,24),new THREE.MeshBasicMaterial({color:0xffffff})); r.rotation.x=Math.PI/2; r.position.set(p.x,p.y+.12,p.z); scene.add(r); });
@@ -105,7 +106,7 @@ function stepD(d,dt){ const p=DR[d.ch], inp=d.inp; let mx=inp.mx, my=inp.my, yw=
   if(d.prop<60&&!d.ground){ const wv=(60-d.prop)/60*.15; tp+=Math.sin(G.t*13+d.ch)*wv; tr+=Math.cos(G.t*11+d.ch)*wv; }
   if(d.dead){ d.pitch+=2.5*dt; d.roll+=3.3*dt; } else { d.pitch+=clamp(tp-d.pitch,-rr,rr); d.roll+=clamp(tr-d.roll,-rr,rr); }
   const sp=Math.sin(d.pitch), sr=Math.sin(d.roll); let ux=-sy*sp+cy*sr, uz=-cy*sp-sy*sr, uy=Math.cos(d.pitch)*Math.cos(d.roll); const ul=Math.hypot(ux,uy,uz)||1; ux/=ul; uy/=ul; uz/=ul;
-  const sag=d.batt<=0?0:(d.batt<.15?.75+d.batt/.15*.25:1), ceilK=1-(1-1/p.twr)*Math.pow(clamp(d.p.y/p.ceil,0,1.25),2);
+  const sag=d.batt<=0?0:(d.batt<.15?.75+d.batt/.15*.25:1), CEIL=Math.min(p.ceil,TOPY), ceilK=1-(1-1/p.twr)*Math.pow(clamp(d.p.y/CEIL,0,1.25),2);
   let Tmax=d.batt<=0?p.m*GR*.88:p.m*GR*p.twr*ceilK*sag*propK*(1-.1*wetM)*(d.dash>0?1.35:1); if(d.tang>0) Tmax=Math.min(Tmax,p.m*GR*.5);
   const idle=d.ground&&al<=.05&&Math.abs(mx)+Math.abs(my)<.05;
   let T; if(d.dead) T=0; else if(idle) T=p.m*GR*.1; else { const vyC=d.pull?d.v.y:al>0?al*p.vUp*(1-.3*wetM):al*p.vDn, ay=clamp((vyC-d.v.y)*4,-9,14); T=clamp(p.m*(GR+ay)/Math.max(.35,uy),p.m*GR*.1,Tmax); }
@@ -114,7 +115,7 @@ function stepD(d,dt){ const p=DR[d.ch], inp=d.inp; let mx=inp.mx, my=inp.my, yw=
   const rx=d.v.x-wx, ry=d.v.y, rz=d.v.z-wz, rs=Math.hypot(rx,ry,rz), k=.5*RHO*p.cda/p.m*(1+wetK*.25);
   d.v.x+=(ux*a-k*rs*rx)*dt; d.v.y+=(uy*a-GR-k*2.2*rs*ry)*dt; d.v.z+=(uz*a-k*rs*rz)*dt;
   d.corn=W.inCorn(d.p.x,d.p.y,d.p.z); if(d.corn){ const f=Math.max(0,1-2.6*dt); d.v.x*=f; d.v.z*=f; d.v.y*=Math.max(0,1-1.2*dt); }
-  d.p.x+=d.v.x*dt; d.p.y+=d.v.y*dt; d.p.z+=d.v.z*dt; d.ground=false; collide(d); if(!d.dead&&(d.local)) hazards(d,dt);
+  d.p.x+=d.v.x*dt; d.p.y+=d.v.y*dt; d.p.z+=d.v.z*dt; if(d.p.y>TOPY+.3){ d.p.y=TOPY+.3; if(d.v.y>0) d.v.y=0; } d.ground=false; collide(d); if(!d.dead&&(d.local)) hazards(d,dt);
   const fy=W.floorAt(d.p.x,d.p.z)+R0; if(d.p.y<fy){ if(d.v.y<-3.5) bump(d,-d.v.y); d.p.y=fy; if(d.v.y<0) d.v.y=0; d.ground=true; }
   if(d.ground){ const f=Math.max(0,1-((idle||d.dead)?10:2.5)*dt); d.v.x*=f; d.v.z*=f; }
   const L=W.LIM; if(Math.abs(d.p.x)>L) d.v.x-=Math.sign(d.p.x)*12*dt; if(Math.abs(d.p.z)>L) d.v.z-=Math.sign(d.p.z)*12*dt;
@@ -453,7 +454,7 @@ function hud(){ const p=DR[me.ch], hs=Math.hypot(me.v.x,me.v.z), wr=Math.atan2(G
     $('bFire').classList.toggle('cd',(me.ch===2?me.hcd:me.cd)>0); $('bDash').classList.toggle('cd',me.dcd>0); }
   for(;ti<tagEls.length;ti++) tagEls[ti].hidden=true;
   const scp=me.ch===4&&me.zoom>0&&!me.dead; scEl.hidden=!scp; if(scp){ scEl.className=G.onT?'on':''; scEl.firstChild.textContent='×'+(me.zoom===2?8:4)+' · '+(G.rng>=169?'далі 170 м':Math.round(G.rng)+' м')+(me.cd>0?' · перезаряд '+me.cd.toFixed(1)+' с':' · готово'); } $('bScope').classList.toggle('on',scp);
-  let m=G.msgT>0?G.msg:''; if(G.aimed&&!me.dead&&duel) m='На тебе цілиться Бабка — ховайся!';  if(!m){ if(me.batt<=0) m='Заряд скінчився'+(duel?'':'. Натисни «На старт»'); else if(me.batt<.15) m='Заряд на межі — шукай блакитну зарядку'; else if(me.prop<30) m='Гвинти побиті — на блакитній зарядці їх полагодять'; else if(Math.abs(me.p.x)>W.LIM||Math.abs(me.p.z)>W.LIM) m='Сигнал слабшає — вертайся'; else if(me.corn) m='У кукурудзі: стебла гальмують'; else if(inFog(me.p)) m='Туман: видно метрів на двадцять'; else if(inCloud(me.p)) m='У хмарі нічого не видно'; }
+  let m=G.msgT>0?G.msg:''; if(G.aimed&&!me.dead&&duel) m='На тебе цілиться Бабка — ховайся!';  if(!m){ if(me.batt<=0) m='Заряд скінчився'+(duel?'':'. Натисни «На старт»'); else if(me.batt<.15) m='Заряд на межі — шукай блакитну зарядку'; else if(me.prop<30) m='Гвинти побиті — на блакитній зарядці їх полагодять'; else if(Math.abs(me.p.x)>W.LIM||Math.abs(me.p.z)>W.LIM) m='Сигнал слабшає — вертайся'; else if(me.corn) m='У кукурудзі: стебла гальмують'; else if(inFog(me.p)) m='Туман: видно метрів на двадцять'; else if(inCloud(me.p)) m='У хмарі нічого не видно'; else if(me.p.y>TOPY-1.2) m='Стеля: вище за найвищу вежу не злетіти'; }
   $('hMsg').textContent=m; $('hit').style.opacity=G.hitT>0?(G.hitT/.35).toFixed(2):0; }
 
 /* ---------- звук ---------- */
@@ -475,7 +476,7 @@ function ui(){ const play=G.mode==='play'; if(autoBig&&!play) setBig(false); doc
   if(play){ setTimeout(resize,30); return; }
   const bar=(l,v)=>'<span>'+l+'</span><i style="--w:'+Math.round(clamp(v,.08,1)*100)+'%"></i>';
   if(G.mode==='menu'){
-    card.innerHTML=(glOK?'':'<p>Цей пристрій не показує 3D у цьому вікні.</p>')+'<span class="k">Бій дронів над фермою · версія '+VER+'</span><h3>Обери дрон</h3><div class="chars">'+DR.map((p,i)=>'<button data-ch="'+i+'" class="'+(i===myCh?'on':'')+'"><b>'+p.n+'</b><em>'+p.w+'</em><div class="stats">'+bar('Швидкість',p.vmax/26.5)+bar('Маневр',p.rate/432)+bar('Стеля',p.ceil/140)+bar('Заряд',p.hov/240)+bar('Проти вітру',1-(p.cda/p.m)/.085)+bar('Тиша',1-p.loud*.9)+bar('Гвинти',p.pt/1.6)+'</div></button>').join('')+'</div>'+(p=>'<div class="stats selst">'+bar('Швидкість',p.vmax/26.5)+bar('Маневр',p.rate/432)+bar('Стеля',p.ceil/140)+bar('Заряд',p.hov/240)+bar('Проти вітру',1-(p.cda/p.m)/.085)+bar('Тиша',1-p.loud*.9)+bar('Гвинти',p.pt/1.6)+'</div>')(DR[myCh])+'<p>'+DR[myCh].d+' <b style="color:var(--star)">'+DR[myCh].wd+'</b></p>'+
+    card.innerHTML=(glOK?'':'<p>Цей пристрій не показує 3D у цьому вікні.</p>')+'<span class="k">Бій дронів над фермою · версія '+VER+'</span><h3>Обери дрон</h3><div class="chars">'+DR.map((p,i)=>'<button data-ch="'+i+'" class="'+(i===myCh?'on':'')+'"><b>'+p.n+'</b><em>'+p.w+'</em><div class="stats">'+bar('Швидкість',p.vmax/26.5)+bar('Маневр',p.rate/432)+bar('Заряд',p.hov/240)+bar('Проти вітру',1-(p.cda/p.m)/.085)+bar('Тиша',1-p.loud*.9)+bar('Гвинти',p.pt/1.6)+'</div></button>').join('')+'</div>'+(p=>'<div class="stats selst">'+bar('Швидкість',p.vmax/26.5)+bar('Маневр',p.rate/432)+bar('Заряд',p.hov/240)+bar('Проти вітру',1-(p.cda/p.m)/.085)+bar('Тиша',1-p.loud*.9)+bar('Гвинти',p.pt/1.6)+'</div>')(DR[myCh])+'<p>'+DR[myCh].d+' <b style="color:var(--star)">'+DR[myCh].wd+'</b></p>'+
       '<div class="rules">'+Object.keys(RULES).map(k=>'<button data-rule="'+k+'" class="'+(k===myRule?'on':'')+'">'+RULES[k].n+'</button>').join('')+'</div><p class="rd">'+RULES[myRule].d+'</p><div class="btns"><button id="mHost">Кімната для друзів (до 6)</button><button class="sec" id="mBot">Проти комп\'ютера</button><button class="sec" id="mFree">Вільний політ</button></div><p class="rd">У кімнату друзі заходять за одним посиланням. Команду, дрон і режим обираєте вже всередині; можна додати комп\'ютерів і грати до 3 на 3.</p>';
     card.querySelectorAll('button[data-ch]').forEach(b=>b.onclick=()=>{ myCh=+b.dataset.ch; try{localStorage.setItem('pz_dr_ch',myCh);}catch(e){} ui(); });
     card.querySelectorAll('button[data-rule]').forEach(b=>b.onclick=()=>{ myRule=b.dataset.rule; try{localStorage.setItem('pz_dr_rule',myRule);}catch(e){} ui(); });
