@@ -45,8 +45,8 @@ body.m .tip,body.used .tip,body:not(.touch) .tip{display:none}
 .card{background:var(--ov);color:var(--ov-fg);border-radius:14px;padding:12px 14px;max-width:680px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:8px;text-align:center}
 .card h3{font-family:var(--f-head);font-weight:700;font-size:clamp(.95rem,3.4vw,1.3rem);line-height:1.25;margin:0}
 .card p{margin:0;font-size:.86rem;color:var(--ov-mute)} .card .k{font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--star)}
-.chars{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-@media (max-width:640px){.chars{grid-template-columns:repeat(3,1fr)}} @media (max-width:400px){.chars{grid-template-columns:repeat(2,1fr)}}
+.chars{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+@media (max-width:760px){.chars{grid-template-columns:repeat(3,1fr)}} @media (max-width:400px){.chars{grid-template-columns:repeat(2,1fr)}}
 .chars button{font:inherit;color:var(--ov-fg);background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.18);border-radius:12px;padding:7px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;text-align:left}
 .chars button.on{border-color:var(--star);background:rgba(227,199,127,.16)}
 .chars b{font-size:.9rem} .chars em{font-style:normal;font-size:.66rem;color:var(--star);line-height:1.2;min-height:2.4em}
@@ -98,13 +98,13 @@ body.big.rot .wrap{inset:auto;left:50%;top:50%;width:100vh;width:100dvh;height:1
   </div>
   <div class="row2">
     <button id="bBig">⛶ На весь екран</button><button id="bSnd" aria-pressed="true">Звук: увімк.</button><button id="bMenu" hidden>Меню</button>
-    <span class="hint">На комп'ютері: W S — газ і задній хід, A D — кермо, пробіл — стрибок, Shift — турбо, F — особлива кнопка (ривок, таран, стріла, жатка), C — камера на м'яч або на машину. У повітрі: пробіл ще раз — сальто вперед із сильним ударом; W S нахиляють ніс, а турбо штовхає туди, куди він дивиться, — так можна підлетіти до високого м'яча. На телефоні: лівий палець — кермо і газ, праворуч — кнопки.</span>
+    <span class="hint">На комп'ютері: W S — газ і задній хід, A D — кермо, пробіл — стрибок, Shift — турбо, F — особлива кнопка (ривок, таран, стріла, жатка, упор), C — камера на м'яч або на машину. У повітрі: пробіл ще раз — сальто вперед із сильним ударом; W S нахиляють ніс, а турбо штовхає туди, куди він дивиться, — так можна підлетіти до високого м'яча. На телефоні: лівий палець — кермо і газ, праворуч — кнопки.</span>
   </div>
 </div>
 <script src="../lib/three.min.js"></script>
 <script src="../lib/peerjs.min.js"></script>
-<script src="core.js?v=1"></script>
-<script src="view.js?v=1"></script>
-<script src="game.js?v=1"></script>
+<script src="core.js?v=2"></script>
+<script src="view.js?v=2"></script>
+<script src="game.js?v=2"></script>
 </body>
 </html>

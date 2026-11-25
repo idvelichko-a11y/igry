@@ -48,7 +48,7 @@ function afterOver(){ G.res=(G.win?'Перемога! ':'Поразка. ')+TEAM
 const r2=v=>Math.round(v*100)/100;
 function remoteStep(c,dt){ const r=c.rp; if(!r) return; r.age+=dt; const a=Math.min(r.age,.25), k=Math.min(1,dt*14), wasAir=c.air; c.x+=(r.p[0]+r.v[0]*a-c.x)*k; c.y+=(Math.max(0,r.p[1]+r.v[1]*a)-c.y)*k; c.z+=(r.p[2]+r.v[2]*a-c.z)*k; let dh=r.h+r.w*a-c.h; dh=Math.atan2(Math.sin(dh),Math.cos(dh)); c.h+=dh*k;
   c.vx=r.v[0]; c.vy=r.v[1]; c.vz=r.v[2]; c.w=r.w; c.st=r.st; const e0=c.ext; c.ext+=(r.e-c.ext)*Math.min(1,dt*20); c.extV=dt>0?(c.ext-e0)/dt:0; c.boosting=!!(r.f&1); c.ramT=r.f&2?.2:0; c.dashT=r.f&4?.2:0; c.air=c.y>.15; c.boost=r.b; c.inp.thr=r.f&8?1:0; c.drift=r.f&16?4:0; c.pit+=(r.pt-c.pit)*k; if(r.f&32){ if(!c._fl){ c._fl=true; c.flipT=.5; S.ev.push({t:'flip',id:c.id}); } } else c._fl=false; if(c.flipT>0) c.flipT-=dt;
-  { const d=!!(r.f&64); if(d&&!(c.demoT>0)) S.ev.push({t:'demo',id:c.id,by:-1,x:c.x,y:c.y+1,z:c.z}); if(!d&&c.demoT>0) S.ev.push({t:'respawn',id:c.id}); c.demoT=d?.3:0; }
+  c.lock=!!(r.f&128); { const d=!!(r.f&64); if(d&&!(c.demoT>0)) S.ev.push({t:'demo',id:c.id,by:-1,x:c.x,y:c.y+1,z:c.z}); if(!d&&c.demoT>0) S.ev.push({t:'respawn',id:c.id}); c.demoT=d?.3:0; }
   if(wasAir&&!c.air) S.ev.push({t:'land',id:c.id,v:9}); Z.updParts(c,dt); }
 function step(dt){ S.t+=dt; const au=auth();
   if(G.phase==='goal'&&G.rp&&G.phT<4.4){ if(!G.repOn){ G.repOn=true; say('Повтор голу',4); S.ev.length=0; } G.phT-=dt; repApply(1-G.phT/4.4); if(G.phT<=0&&au){ G.repOn=false; if(G.kind!=='free'&&(G.ot||G.clock<=0)) hostOver(); else { send({t:'ko'}); setKick(); } } if(G.msgT>0) G.msgT-=dt; return; } G.repOn=false;
@@ -127,7 +127,7 @@ function onMsg(m){ if(!m||typeof m!=='object') return; const from=m.from|0, cc=v
    case 'pi': if(isHost) send({t:'po',ts:m.ts},from); break; case 'po': G.rtt=Math.round(performance.now()-m.ts); break; } }
 setInterval(()=>{ if(!inRoom) return; const now=performance.now(); if(isHost){ for(const k in conns){ const c=conns[k]; if(c._t&&now-c._t>20000){ try{c.close();}catch(e){} if(conns[k]===c) drop(+k); } } } else { send({t:'pi',ts:now},0); if(lastHost&&now-lastHost>20000) netFail('Зв\'язок із кімнатою обірвався. Зайди ще раз за тим самим посиланням.'); } },2000);
 function netFrame(dt){ if(G.kind!=='net'||!inRoom||G.mode!=='play') return; sendT+=dt; ballT+=dt;
-  if(sendT>=1/(S.cars.length>4?15:20)){ sendT=0; const mk=q=>({t:'s',id:q.id,p:[r2(q.x),r2(q.y),r2(q.z)],v:[r2(q.vx),r2(q.vy),r2(q.vz)],h:Math.round(q.h*1000)/1000,w:r2(q.w),st:r2(q.st),e:r2(q.ext),f:(q.boosting?1:0)|(q.ramT>0?2:0)|(q.dashT>0?4:0)|(Math.abs(q.inp.thr)>.5?8:0)|(q.drift>2.5?16:0)|(q.flipT>0?32:0)|(q.demoT>0?64:0),pt:r2(q.pit),b:Math.round(q.boost)}); for(const q of S.cars) if(q.local) send(mk(q)); }
+  if(sendT>=1/(S.cars.length>4?15:20)){ sendT=0; const mk=q=>({t:'s',id:q.id,p:[r2(q.x),r2(q.y),r2(q.z)],v:[r2(q.vx),r2(q.vy),r2(q.vz)],h:Math.round(q.h*1000)/1000,w:r2(q.w),st:r2(q.st),e:r2(q.ext),f:(q.boosting?1:0)|(q.ramT>0?2:0)|(q.dashT>0?4:0)|(Math.abs(q.inp.thr)>.5?8:0)|(q.drift>2.5?16:0)|(q.flipT>0?32:0)|(q.demoT>0?64:0)|(q.lock?128:0),pt:r2(q.pit),b:Math.round(q.boost)}); for(const q of S.cars) if(q.local) send(mk(q)); }
   if(isHost&&ballT>=1/20){ ballT=0; const b=S.ball; send({t:'b',p:[r2(b.x),r2(b.y),r2(b.z)],v:[r2(b.vx),r2(b.vy),r2(b.vz)],tc:b.touch,tm:b.team,c:Math.round(G.clock*10)/10}); } }
 
 /* ---------- індикатори ---------- */
@@ -136,7 +136,7 @@ function fmtT(t){ t=Math.max(0,Math.ceil(t)); return Math.floor(t/60)+':'+String
 let hudN=0;
 function hud(){ hudN++; const play=G.mode==='play';
   if(hudN%4===0){ const myT=me?me.team:0; $('hTop').innerHTML='<span class="b">'+(myT===0?'<small>ТИ</small>':'')+G.sc[0]+'</span><span class="t">'+(G.kind==='free'?'∞':G.ot?'<small>ЗОЛОТИЙ ГОЛ</small>':fmtT(G.clock))+'</span><span class="o">'+G.sc[1]+(myT===1?'<small>ТИ</small>':'')+'</span>';
-    if(me){ const M=MACH[me.ch]; let sp=''; if(M.sp==='dash'||M.sp==='ram') sp=M.spn+': '+(me.ramT>0?'діє '+me.ramT.toFixed(1)+' с':me.scd>0?'через '+me.scd.toFixed(1)+' с':'готово'); else sp=M.spn+': '+Math.round(me.ext*100)+'%';
+    if(me){ const M=MACH[me.ch]; let sp=''; if(M.sp==='lock') sp=M.spn+': '+(me.lock?'тримає':'готово'); else if(M.sp==='dash'||M.sp==='ram') sp=M.spn+': '+(me.ramT>0?'діє '+me.ramT.toFixed(1)+' с':me.scd>0?'через '+me.scd.toFixed(1)+' с':'готово'); else sp=M.spn+': '+Math.round(me.ext*100)+'%';
       $('hL').innerHTML='<b>'+M.n+'</b> · '+Math.round(Math.hypot(me.vx,me.vz)*3.6)+' км/год<div class="bar"><i style="width:'+me.boost.toFixed(0)+'%"></i></div>Турбо '+Math.round(me.boost)+'%<br>'+sp+'<br><span style="opacity:.6">'+fps.toFixed(0)+' кадрів/с'+(G.kind==='net'&&G.rtt?' · зв\'язок '+G.rtt+' мс':'')+'</span>';
       $('bSpec').classList.toggle('cd',me.scd>0); $('bBoost').classList.toggle('cd',me.boost<=0); } }
   $('hMsg').textContent=G.msgT>0?G.msg:''; const hb=$('hBig'); if(G.bigT>0){ hb.innerHTML=G.big+(G.bigS?'<small>'+G.bigS+'</small>':''); hb.style.opacity=Math.min(1,G.bigT*3).toFixed(2); } else if(hb.innerHTML) hb.innerHTML='';
@@ -210,6 +210,7 @@ const snd={
     else if(e.t==='flip'&&c){ snd.noise(.25,mine?.14:.06,2400); if(mine) snd.beep(330,0,.2,'triangle',.08,660); }
     else if(e.t==='demo'){ snd.noise(.7,.4*k,900); snd.beep(90,0,.6,'sawtooth',.25*k,30); snd.beep(60,.05,.7,'square',.15*k,25); }
     else if(e.t==='respawn'&&mine){ snd.beep(440,0,.15,'triangle',.1,880); }
+    else if(e.t==='lock'&&c){ snd.beep(140,0,.16,'square',mine?.1:.04,80); snd.noise(.1,mine?.1:.04,700); }
     else if(e.t==='arm'&&mine){ snd.beep(320,0,.18,'triangle',.07,640); } },
   goal(ours){ if(!AC) return; for(const f of [220,277,330]){ snd.beep(f,0,1.1,'sawtooth',.11); snd.beep(f*1.005,.02,1.1,'square',.05); } snd.noise(.6,.3,700); const t=AC.currentTime; nz.gC.gain.cancelScheduledValues(t); nz.gC.gain.setValueAtTime(.03,t); nz.gC.gain.linearRampToValueAtTime(.2,t+.35); nz.gC.gain.linearRampToValueAtTime(.03,t+3.4); if(ours) [523,659,784,1047].forEach((f,i)=>snd.beep(f,.5+i*.11,.25,'triangle',.13)); },
   end(win){ if(!AC) return; (win?[523,659,784,1047,1319]:[392,330,262]).forEach((f,i)=>snd.beep(f,i*.16,.35,'triangle',.15)); },

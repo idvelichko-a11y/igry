@@ -15,7 +15,9 @@ const MACH=[
  {n:'Телескоп',k:'телескопічний навантажувач',sp:'boom',spn:'СТРІЛА',m:4,hl:2.4,hw:1.15,hh:2.1,vmax:21,acc:11.5,turn:2.15,jump:8.6,hit:1,scd:0,
   d:'Стріла піднімається й висувається: дістає високий м\'яч, підкидає його, відбиває як воротар.',wd:'Тримай кнопку — стріла йде вгору і вперед. З висунутою стрілою повертає гірше.'},
  {n:'Комбайн',k:'зернозбиральний комбайн',sp:'hdr',spn:'ЖАТКА',m:9,hl:3.2,hw:1.7,hh:3.3,vmax:19,acc:9.5,turn:1.7,jump:7.2,hit:1.15,scd:0,hw2:4.3,
-  d:'Широка жатка закриває півворіт і штовхає м\'яч. Найповільніший і неповороткий.',wd:'Тримай кнопку — жатка піднімається й відбиває високі м\'ячі, а низькі проходять під нею.'}
+  d:'Широка жатка закриває півворіт і штовхає м\'яч. Найповільніший і неповороткий.',wd:'Тримай кнопку — жатка піднімається й відбиває високі м\'ячі, а низькі проходять під нею.'},
+ {n:'Гусень',k:'гусеничний трактор',sp:'lock',spn:'УПОР',trk:true,m:7.5,hl:2.3,hw:1.45,hh:2.5,vmax:19,acc:15,turn:2.6,jump:6.8,hit:1.15,scd:0,
+  d:'Розвертається на місці, як танк, і не ковзає. Важкий: його важко зрушити. Повільний, майже не стрибає, турбо дає менше.',wd:'Упор: тримай кнопку — гусениці стоять намертво, його не зрушити, а м\'яч відскакує як від стіни. Корпус можна повертати.'}
 ];
 const KO=[[-24,0],[-37,-14],[-37,14]];
 const PADS=[[-46,-27,1],[46,-27,1],[-46,27,1],[46,27,1],[0,-34,1],[0,34,1],[-22,-12,0],[22,-12,0],[-22,12,0],[22,12,0],[-38,0,0],[38,0,0],[0,-16,0],[0,16,0]];
@@ -26,7 +28,7 @@ function newBall(){ return {x:0,y:F.BR,z:0,vx:0,vy:0,vz:0,touch:-1,team:-1,spin:
 function newState(){ return {cars:[],ball:newBall(),pads:PADS.map(()=>0),ev:[],t:0,frozen:false}; }
 function kickoff(S){ const cnt=[0,0]; for(const c of S.cars){ const k=KO[cnt[c.team]++%3], s=c.team?-1:1; if(c.local){ c.x=k[0]*s; c.z=k[1]*s+(c.bot?(Math.random()-.5)*3:0); c.y=0; c.h=c.team?Math.PI:0; c.vx=c.vy=c.vz=c.w=c.st=c.wk=0; c.ext=c.extV=0; c.dashT=c.ramT=0; c.scd=0; c.boost=34; c.tip=null; c.pit=0; c.flipT=0; c.flipUsed=false; c.demoT=0; } }
   const b=S.ball; b.x=0; b.y=F.BR; b.z=0; b.vx=b.vy=b.vz=0; b.touch=-1; b.team=-1; for(let i=0;i<S.pads.length;i++) S.pads[i]=0; }
-function effMass(c){ return MACH[c.ch].m*(c.ramT>0?6:1); }
+function effMass(c){ return MACH[c.ch].m*(c.ramT>0?6:1)*(c.lock?400:1); }
 /* стріла навантажувача: шарнір ззаду на даху, кінець із вилами */
 function boomGeo(c){ const e=c.ext, ang=(4+56*e)*Math.PI/180, len=3.4+4.4*e, fx=Math.cos(c.h), fz=Math.sin(c.h), ca=Math.cos(ang), sa=Math.sin(ang), px=c.x-fx*1.1, py=c.y+2.25, pz=c.z-fz*1.1;
   return {px:px,py:py,pz:pz,tx:px+fx*ca*len,ty:py+sa*len,tz:pz+fz*ca*len,ang:ang,len:len}; }
@@ -41,21 +43,23 @@ function stepCar(c,dt,S){ const M=MACH[c.ch], inp=c.inp, frozen=S.frozen; if(c.d
   const sp=!frozen&&inp.spec, edge=sp&&!c.specPrev; c.specPrev=!!inp.spec;
   if(M.sp==='dash'&&edge&&c.scd<=0){ c.scd=M.scd; c.dashT=.55; vf=Math.max(vf,0)+M.imp; S.ev.push({t:'dash',id:c.id}); }
   if(M.sp==='ram'&&edge&&c.scd<=0){ c.scd=M.scd; c.ramT=2; vf+=3; S.ev.push({t:'ram',id:c.id}); }
+  c.lock=M.sp==='lock'&&sp&&c.y<=.001; if(M.sp==='lock'&&edge) S.ev.push({t:'lock',id:c.id});
   if(M.sp==='boom'||M.sp==='hdr'){ const e0=c.ext, up=M.sp==='boom'?3.1:3.2, dn=M.sp==='boom'?1.9:2.6; c.ext=clamp(c.ext+(sp?up:-dn)*dt,0,1); c.extV=(c.ext-e0)/dt; if(edge) S.ev.push({t:'arm',id:c.id}); }
   c.boosting=!frozen&&inp.boost&&c.boost>0; if(c.boosting){ c.boost=Math.max(0,c.boost-27*dt); if(thr<=0) thr=1; }
-  const vmax=M.vmax*(c.boosting?1.36:1)*(c.dashT>0?1.3:1)*(c.ramT>0?1.08:1);
+  const vmax=M.vmax*(c.boosting?(M.trk?1.2:1.36):1)*(c.dashT>0?1.3:1)*(c.ramT>0?1.08:1);
   if(ground){ let a;
-    if(thr>0) a=M.acc*(c.boosting?1.75:1)*thr*Math.max(0,1-vf/vmax)+(vf<0?20:0);
+    if(c.lock){ thr=0; vf*=Math.exp(-14*dt); vl*=Math.exp(-14*dt); }
+    if(thr>0) a=M.acc*(c.boosting?(M.trk?1.4:1.75):1)*thr*Math.max(0,1-vf/vmax)+(vf<0?20:0);
     else if(thr<0) a=vf>1?-26*-thr:M.acc*.75*thr*Math.max(0,1+vf/(M.vmax*.42));
     else a=-vf*.9-Math.sign(vf)*Math.min(Math.abs(vf),1.2);
     if(vf>vmax) a-=(vf-vmax)*2.2;
     vf+=a*dt;
-    const sf=Math.min(1,Math.abs(vf)/M.vmax), slide=Math.abs(c.st)*sf, grip=10.5-7.2*slide*slide-(c.wk?3:0); vl*=Math.exp(-grip*dt); c.drift=Math.abs(vl);
-    const bk=M.sp==='boom'?1-.45*c.ext:1; c.w=c.st*M.turn*clamp(vf/7,-1,1)*(1-.4*sf)*bk;
+    const sf=Math.min(1,Math.abs(vf)/M.vmax), slide=Math.abs(c.st)*sf, grip=M.trk?15:10.5-7.2*slide*slide-(c.wk?3:0); vl*=Math.exp(-grip*dt); c.drift=Math.abs(vl);
+    const bk=M.sp==='boom'?1-.45*c.ext:1; c.w=M.trk?c.st*M.turn*(c.lock?.6:1)*(vf<-1.5?-1:1):c.st*M.turn*clamp(vf/7,-1,1)*(1-.4*sf)*bk;
     c.pit*=Math.exp(-14*dt); c.airT=0; c.flipUsed=false;
   } else { c.w=c.st*1.3; c.airT+=dt; c.drift=0;
     if(c.flipT>0){ c.flipT-=dt; } else c.pit=clamp(c.pit-thrRaw*2.3*dt,-1.1,1.35);
-    if(c.boosting){ const A=29; vf+=A*Math.cos(c.pit)*dt; c.vy+=A*Math.sin(c.pit)*dt; if(c.y>15&&c.vy>0) c.vy*=Math.exp(-4*dt); if(vf>vmax*1.15) vf-=(vf-vmax*1.15)*3*dt; } }
+    if(c.boosting){ const A=M.trk?22:29; vf+=A*Math.cos(c.pit)*dt; c.vy+=A*Math.sin(c.pit)*dt; if(c.y>15&&c.vy>0) c.vy*=Math.exp(-4*dt); if(vf>vmax*1.15) vf-=(vf-vmax*1.15)*3*dt; } }
   { const jp=!frozen&&inp.jump, je=jp&&!c.jPrev; c.jPrev=!!jp; if(je&&!ground&&!c.flipUsed&&c.airT>.08&&c.airT<1.5){ c.flipUsed=true; c.flipT=.5; c.pit=0; c.vy=Math.max(c.vy,0)+3.2; vf+=7.5; S.ev.push({t:'flip',id:c.id}); } }
   if(c.wk){ c.w+=c.wk; c.wk*=Math.exp(-3*dt); if(Math.abs(c.wk)<.05) c.wk=0; }
   c.vx=fx*vf-fz*vl; c.vz=fz*vf+fx*vl; c.h+=c.w*dt;
@@ -96,9 +100,9 @@ function goalOf(b){ if(Math.abs(b.x)>F.FL+F.BR*.55&&Math.abs(b.z)<F.GW&&b.y<F.GH
 
 function impact(b,c,S,nx,ny,nz,pen,cvx,cvy,cvz,power,mEff,lift){ if(lift&&ny<.4&&b.y<F.BR+1.6){ ny+=.24; const l=hyp(nx,ny,nz); nx/=l; ny/=l; nz/=l; }
   b.x+=nx*pen; b.y+=ny*pen; b.z+=nz*pen; const vn=(b.vx-cvx)*nx+(b.vy-cvy)*ny+(b.vz-cvz)*nz; if(vn>=0) return;
-  const k=mEff/(mEff+F.MB), close=-vn, again=S.t-(b.lastHit||-9)<.12&&b.touch!==c.id; let j=again?close*k*.85:(1+.42)*close*k; if(close>4&&!again) j+=Math.min(9,close*.2)*power; if(!again) j*=(.75+.25*power); b.lastHit=S.t;
+  const k=mEff/(mEff+F.MB), close=-vn, again=S.t-(b.lastHit||-9)<.12&&b.touch!==c.id; let j=again?close*k*.85:(1+(c.lock?.72:.42))*close*k; if(close>4&&!again&&!c.lock) j+=Math.min(9,close*.2)*power; if(!again) j*=(.75+.25*power); b.lastHit=S.t;
   b.vx+=nx*j; b.vy+=ny*j; b.vz+=nz*j; if(b.vy>21) b.vy=21; b.touch=c.id; b.team=c.team; c.touchT=S.t;
-  if(c.local&&c.ramT<=0){ const kc=j*F.MB/mEff*.5; c.vx-=nx*kc; c.vz-=nz*kc; }
+  if(c.local&&c.ramT<=0&&!c.lock){ const kc=j*F.MB/mEff*.5; c.vx-=nx*kc; c.vz-=nz*kc; }
   if(close>3) S.ev.push({t:'hit',id:c.id,v:close,j:j,x:b.x-nx*F.BR,y:b.y-ny*F.BR,z:b.z-nz*F.BR}); }
 function sphHit(b,c,S,sx,sy,sz,sr,vx,vy,vz,power,mEff){ const dx=b.x-sx, dy=b.y-sy, dz=b.z-sz, d=hyp(dx,dy,dz), R=F.BR+sr; if(d>=R||d<1e-4) return false; impact(b,c,S,dx/d,dy/d,dz/d,R-d,vx,vy,vz,power,mEff,false); return true; }
 function boxHit(b,c,S,cx,cl,hl,hwz,y0,y1,vyAdd,power,mEff){ /* коробка в осях машини: центр уздовж cx, півдовжина cl */
@@ -120,7 +124,7 @@ const cA=[], cB=[];
 function carVsCar(a,b,S){ if(!a.local||a.demoT>0||b.demoT>0) return; const MA=MACH[a.ch], MBm=MACH[b.ch]; if(hyp(a.x-b.x,a.z-b.z)>MA.hl+MBm.hl+6) return; if(a.y>b.y+MBm.hh-.3||b.y>a.y+MA.hh-.3) return;
   circles(a,cA); circles(b,cB); const ma=effMass(a), mb=effMass(b), share=mb/(ma+mb);
   for(const p of cA) for(const q of cB){ const dx=p[0]-q[0], dz=p[1]-q[1], d=hyp(dx,dz), R=p[2]+q[2]; if(d>=R||d<1e-4) continue; const nx=dx/d, nz=dz/d, pen=(R-d)*share; a.x+=nx*pen; a.z+=nz*pen; p[0]+=nx*pen; p[1]+=nz*pen;
-      const vn=(a.vx-b.vx)*nx+(a.vz-b.vz)*nz; if(vn<0){ const k=-vn*1.3*share; a.vx+=nx*k; a.vz+=nz*k; if(-vn>24&&share>.62&&a.ramT<=0){ a.demoT=2.6; S.ev.push({t:'demo',id:a.id,by:b.id,x:a.x,y:a.y+1,z:a.z}); return; } if(-vn>8&&share>.5&&a.ramT<=0){ if(a.y<=.01){ a.vy=Math.min(9,-vn*.33*share*1.6); a.y=.002; } a.wk=(Math.random()<.5?-1:1)*Math.min(5,-vn*.22); S.ev.push({t:'bump',id:a.id,by:b.id,v:-vn,x:(p[0]+q[0])/2,y:a.y+1,z:(p[1]+q[1])/2}); } else if(-vn>5) S.ev.push({t:'clang',id:a.id,v:-vn,x:(p[0]+q[0])/2,y:a.y+1,z:(p[1]+q[1])/2}); } } }
+      const vn=(a.vx-b.vx)*nx+(a.vz-b.vz)*nz; if(vn<0){ const k=-vn*1.3*share; a.vx+=nx*k; a.vz+=nz*k; if(-vn>24&&share>.62&&a.ramT<=0&&!a.lock){ a.demoT=2.6; S.ev.push({t:'demo',id:a.id,by:b.id,x:a.x,y:a.y+1,z:a.z}); return; } if(-vn>8&&share>.5&&a.ramT<=0&&!a.lock){ if(a.y<=.01){ a.vy=Math.min(9,-vn*.33*share*1.6); a.y=.002; } a.wk=(Math.random()<.5?-1:1)*Math.min(5,-vn*.22); S.ev.push({t:'bump',id:a.id,by:b.id,v:-vn,x:(p[0]+q[0])/2,y:a.y+1,z:(p[1]+q[1])/2}); } else if(-vn>5) S.ev.push({t:'clang',id:a.id,v:-vn,x:(p[0]+q[0])/2,y:a.y+1,z:(p[1]+q[1])/2}); } } }
 /* заправки: рахує господар */
 function padStep(S,dt){ for(let i=0;i<PADS.length;i++){ if(S.pads[i]>0){ S.pads[i]-=dt; continue; } const p=PADS[i]; for(const c of S.cars){ if(c.demoT>0||(c.boost>=100&&c.local)) continue; if(c.y<1.2&&hyp(c.x-p[0],c.z-p[1])<(p[2]?3.2:2.4)){ S.pads[i]=p[2]?10:5; S.ev.push({t:'pad',i:i,id:c.id}); break; } } } }
 function padGive(c,i){ c.boost=PADS[i][2]?100:Math.min(100,c.boost+28); }
@@ -153,6 +157,7 @@ function botThink(c,S,dt){ const bs=c.bs, M=MACH[c.ch], b=S.ball, inp=c.inp, sgn
   if(M.sp==='dash') spec=bs.go&&bd>7&&bd<17&&Math.abs(ba)<.16&&c.scd<=0&&Math.random()<bs.skill*.2;
   else if(M.sp==='ram'){ if(c.scd<=0&&bs.go&&bd<11&&Math.abs(ba)<.3) for(const o of S.cars) if(o.team!==c.team&&hyp(o.x-c.x,o.z-c.z)<9){ spec=Math.random()<bs.skill*.3; break; } }
   else if(M.sp==='boom'){ const hold=bd<9.2&&bd>2.2&&Math.abs(ba)<.42&&(b.y>2.3||bd<7.4&&bs.go&&Math.abs(da)<.5)||(bs.role==='def'&&bd<11&&b.y>3&&Math.abs(ba)<.6); spec=hold; }
+  else if(M.sp==='lock'){ const toMe=(b.vx*(c.x-b.x)+b.vz*(c.z-b.z))/(bd||1); spec=bs.role==='def'&&bd<13&&toMe>9&&Math.abs(vf)<6; }
   else if(M.sp==='hdr'){ spec=bd<12&&Math.abs(ba)<.9&&b.y>2.6&&b.y<6.2; }
   inp.spec=spec; }
 

@@ -88,6 +88,8 @@ function carMesh(ch,team){ const M=MACH[ch], root=new T.Group(), body=new T.Grou
     for(const sz of [-1,1]){ const w=wheel(wr,.8,root,L*.2,wr,sz*(M.hw-.05),U.wheels); const w2=wheel(.7,.5,root,-L*.36,.7,sz*(M.hw-.3),U.wheels); U.front.push(w2); }
     const hd=new T.Group(); hd.position.set(M.hl+.9,0,0); root.add(hd); box(1.6,.9,M.hw2*2,dm,0,.6,0,hd); box(.25,1.25,M.hw2*2,dk,-.75,.8,0,hd); const reel=new T.Group(); reel.position.set(.5,1.15,0); hd.add(reel); for(let i=0;i<5;i++){ const a=i/5*6.28; box(.08,.08,M.hw2*2-.3,lam(0xE8E2C8),Math.cos(a)*.6,Math.sin(a)*.6,0,reel); } for(const q of [-1,0,1]){ const d=cyl(.62,.62,.06,10,dk,0,0,q*(M.hw2-.2),reel); d.rotation.x=Math.PI/2; }
     box(1.2,.5,1.4,dk,M.hl-.2,1.4,0,body); U.hd=hd; U.reel=reel; U.exPos=[-L*.3,wr+3,Wd*.3]; }
+  else if(M.trk){ const th=.95, tw=.62; for(const q of [-1,1]){ const z=q*(M.hw-tw/2); box(L*.82,th,tw,dk,0,th/2,z,root); for(const e of [-1,1]){ const cc=cyl(th/2,th/2,tw,12,dk,e*L*.41,th/2,z,root); cc.rotation.x=Math.PI/2; } for(let i=0;i<4;i++){ const w=cyl(.24,.24,tw+.06,8,lam(0xE8E2C8),-L*.3+i*L*.2,.3,z,root); w.rotation.x=Math.PI/2; } box(L*.9,.1,tw+.16,dm,0,th+.06,z,body); }
+    box(L*.8,H*.22,Wd*.5,dk,0,th+H*.11,0,body); box(L*.5,H*.3,Wd*.5,cm,L*.16,th+H*.36,0,body); box(.12,H*.26,Wd*.44,dk,L*.42,th+H*.36,0,body); box(L*.36,H*.42,Wd*.56,gl,-L*.22,th+H*.43,0,body); box(L*.4,H*.05,Wd*.62,cm,-L*.22,th+H*.66,0,body); cyl(.07,.07,H*.3,6,dk,L*.3,th+H*.62,Wd*.16,body); U.exPos=[L*.3,th+H*.8,Wd*.16]; }
   else { const rr=H*.37, fr=H*.24, hoodL=L*.52, cabL=L*.4; box(L*.9,H*.2,Wd*.5,dk,0,rr*.95,0,body); box(hoodL,H*.3,Wd*.56,cm,L*.2,rr+H*.2,0,body); box(.12,H*.26,Wd*.5,dk,L*.2+hoodL/2+.05,rr+H*.2,0,body);
     box(cabL,H*.42,Wd*.72,gl,-L*.22,rr+H*.37,0,body); box(cabL+.2,H*.05,Wd*.8,cm,-L*.22,rr+H*.6,0,body); for(const q of [-1,1]) box(cabL*1.1,.1,.5,dm,-L*.24,rr*1.9+.1,q*(M.hw-.05),body);
     const ex=cyl(.07,.07,H*.34,6,dk,L*.3,rr+H*.5,Wd*.2,body); if(ch===2){ box(.5,H*.16,Wd*.9,dk,L*.47,rr*.8,0,body); for(const q of [-1,1]) cyl(.07,.07,H*.34,6,dk,L*.3,rr+H*.5,q*Wd*.2,body); }
@@ -111,7 +113,7 @@ function placeCar(c,dt){ const m=c.mesh; if(!m) return; const U=m.userData, M=U.
   U.spin+=vf*dt; for(const w of U.wheels){ w.rotation.z=-U.spin/(w.children[0].geometry.parameters.radiusTop||1); } for(const w of U.front) w.rotation.y=-c.st*.5;
   if(U.piv){ const g=Z.boomGeo(c); U.piv.rotation.z=g.ang; const ext=g.len-3.4; U.inner.children[0].position.x=0; U.inner.children[0].scale.x=ext+.4; U.inner.position.x=3.2+(ext+.4)/2-.2; U.plate.position.x=g.len; U.plate.rotation.z=-g.ang*.6; }
   if(U.hd){ U.hd.position.y=c.y*0+.15+c.ext*2.7-.15; U.reel.rotation.z-=(Math.abs(vf)*.5+2)*dt; }
-  U.aura.visible=c.ramT>0; if(c.ramT>0) U.aura.material.opacity=.2+.12*Math.sin(V.t*18);
+  U.aura.visible=c.ramT>0||!!c.lock; if(U.aura.visible){ U.aura.material.opacity=c.lock?.16+.05*Math.sin(V.t*8):.2+.12*Math.sin(V.t*18); U.aura.material.color.setHex(c.lock?0x9FD0FF:0xFFE08A); }
   U.sh.position.set(c.x,.05,c.z); U.sh.rotation.z=c.h; U.sh.material=V.shMat; const k=1/(1+c.y*.25); U.sh.scale.set(M.hl*1.25*k,M.hw*1.5*k,1);
   /* пил, вихлоп, турбо */
   if(dt>0){ U.dT-=dt; const sp=Math.abs(vf), ground=!c.air; if(U.dT<=0){ U.dT=.03; const bx=c.x-fx*M.hl*.7, bz=c.z-fz*M.hl*.7;
@@ -135,6 +137,7 @@ function fxEvent(e,S,me){ const near=me?Math.hypot((e.x||0)-me.x,(e.z||0)-me.z):
   else if(e.t==='flip'&&c){ burst(glow,10,c.x,c.y+1,c.z,6,.3,1.8,.8,.9,1,0); }
   else if(e.t==='demo'){ burst(glow,coarse?40:80,e.x,e.y,e.z,26,.6,3.2,1,.7,.3,6,3); burst(dust,22,e.x,e.y,e.z,9,1.4,10,.16,.16,.16,-1.5,2); burst(conf,coarse?20:40,e.x,e.y,e.z,18,1.6,2,.2,.2,.2,18,6); ring(e.x,e.y,e.z,0xFFB050,12,.5); ring(e.x,.2,e.z,0xFFFFFF,14,.6,true); if(near<50) V.shake=Math.max(V.shake,c===me?1.4:.6); }
   else if(e.t==='respawn'&&c){ ring(c.x,.2,c.z,TEAMC[c.team],7,.6,true); burst(glow,16,c.x,1.5,c.z,7,.5,2,.7,.9,1,-3,2); }
+  else if(e.t==='lock'&&c){ ring(c.x,.2,c.z,0x9FD0FF,6,.35,true); burst(dust,8,c.x,.2,c.z,4,.6,8,.8,.72,.46,-.3,.5); }
   else if(e.t==='ram'&&c){ ring(c.x,1.2,c.z,0xFFD060,9,.5,true); burst(glow,20,c.x,1.5,c.z,10,.4,2.6,1,.8,.3,0); }
   else if(e.t==='bump'){ burst(glow,24,e.x,e.y,e.z,14,.4,2.2,1,.9,.6,10); burst(dust,8,e.x,e.y,e.z,6,.8,9,.5,.5,.5,-.3); ring(e.x,e.y,e.z,0xFFFFFF,5,.3); if(near<30) V.shake=Math.max(V.shake,c===me?.8:.3); }
   else if(e.t==='clang'){ burst(glow,8,e.x,e.y,e.z,7,.3,1.8,1,.9,.6,10); }
