@@ -43,6 +43,7 @@ function ballFree(b,dt){ b.vy-=GB*dt; b.x+=b.vx*dt; b.y+=b.vy*dt; b.rot+=b.vx*dt
 function hitP(b,p){ const c=CH[p.ch], cx=p.x; let cy=p.y+c.H-c.rh, r=c.rh, dx=b.x-cx, dy=b.y-cy, d=Math.hypot(dx,dy);
   if(d>=RB+r){ cy=clamp(b.y,p.y+c.rs,Math.max(p.y+c.rs,p.y+c.H-c.rh)); r=c.rs; dx=b.x-cx; dy=b.y-cy; d=Math.hypot(dx,dy); if(d>=RB+r) return false; }
   let nx=d>1e-4?dx/d:0, ny=d>1e-4?dy/d:1; b.x=cx+nx*(RB+r+.02); b.y=cy+ny*(RB+r+.02);
+  { const lim=50+(p.side?1:-1)*(RB+NR); if(b.y<NH+RB&&(p.side?b.x<lim:b.x>lim)){ b.x=lim; b.vx=0; b.vy=Math.min(b.vy,-4); } }   /* м'яч затиснуло між гравцем і сіткою — крізь сітку не пролазить, падає на свій бік */
   if(p.cd>0) return false;
   const spike=!p.gr&&Math.abs(p.x-50)<15&&b.y>NH+1.5; if(spike){ const s=p.side?-1:1; nx=s*.93; ny=-.36; }
   else { const f=c.fw, s=p.side?-1:1; nx+=s*f; ny+=f*.5; const l=Math.hypot(nx,ny)||1; nx/=l; ny/=l; }
@@ -55,21 +56,24 @@ function sideName(s){ if(G.kind==='local') return s===0?'Лівий':'Прави
 function point(w,why){ lastWin=w; G.score[w]++; G.phase='point'; G.pT=1.5; G.over=isOver(); G.decl=true;
   const prev=byId(G.srvId), served=prev?prev.side:-1; if(served!==w){ const n=team(w).length; if(n) G.sIdx[w]=(G.sIdx[w]+1)%n; }
   if(G.kind==='net'){ G.epoch++; send({t:'pt',e:G.epoch,sc:G.score,w:w,why:why}); }
-  pointFx(w); }
-function pointFx(w){ const mine=G.kind!=='local'&&w===mySide(); say(G.kind==='local'?'Очко: '+sideName(w).toLowerCase():mine?(G.fmt===1?'Очко тобі!':'Очко твоїй команді!'):'Очко суперника',1.4);
+  G.why=why;
+  pointFx(w,why); }
+function pointFx(w,why){ const mine=G.kind!=='local'&&w===mySide(); if(why==='net') say('М\'яч протиснули крізь сітку — '+(G.kind==='local'?'очко: '+sideName(w).toLowerCase():mine?'очко вам':'очко суперникам'),2.2); else say(G.kind==='local'?'Очко: '+sideName(w).toLowerCase():mine?(G.fmt===1?'Очко тобі!':'Очко твоїй команді!'):'Очко суперника',1.4);
   beep(880,0,.12,'square',.07); beep(mine||G.kind==='local'?1175:660,.13,.2,'square',.07); }
 function serverOf(side){ const t=team(side); return t.length?t[(G.sIdx[side]||0)%t.length]:null; }
 function startServe(id){ const sp=byId(id)||G.P[0]; G.phase='serve'; G.srvT=0; G.srvId=sp.id; G.owner=devOf(sp); G.touch=0; G.lastSide=-1; G.decl=false; G.hoT=0;
   const b=G.ball; b.x=sp.home; G.serveY=CH[sp.ch].H+6.5; b.y=G.serveY; b.vx=b.vy=0; G.ballSide=sp.side;
   for(const p of G.P) if(p.local){p.x=p.home;p.y=0;p.vx=p.vy=0;p.gr=true;p.jn=0;}
   say('Подає: '+nameP(sp).toLowerCase(),1.1); }
-function ballAuth(dt,cols){ const b=G.ball;
+function ballAuth(dt,cols){ const b=G.ball, x0=b.x, y0=b.y;
   if(G.phase==='serve'){ b.vx=b.vy=0; b.y=G.serveY+Math.sin(G.t*4)*.4; G.srvT+=dt; if(G.srvT>7){ G.phase='rally'; G.lastSide=-1; } }
   else if(ballFree(b,dt)) tick(170,.04);
   for(const p of cols){ if(hitP(b,p)){ beep(190+CH[p.ch].pw*90,0,.09,'triangle',.16);
       if(G.phase==='serve') G.phase='rally';
       if(G.phase==='rally'){ if(G.lastSide===p.side) G.touch++; else {G.lastSide=p.side;G.touch=1;} } } }
   const s=Math.hypot(b.vx,b.vy); if(s>82){b.vx*=82/s;b.vy*=82/s;}
+  /* м'яч протиснули під сіткою чи крізь неї — очко тій стороні, куди він проліз */
+  if(G.phase==='rally'&&(x0-50)*(b.x-50)<0&&Math.min(y0,b.y)<NH+RB*.6){ point(b.x<50?0:1,'net'); return; }
   if(b.y<=RB){ b.y=RB; if(G.phase==='rally'){ tick(90,.12); point(b.x<50?1:0,'land'); b.vy=Math.abs(b.vy)*.5; b.vx*=.7; return; } b.vy=Math.abs(b.vy)*.55; b.vx*=.8; } }
 let tickCd=0; function tick(f,v){ if(tickCd>0)return; tickCd=.08; beep(f,0,.06,'sine',v); }
 
@@ -163,7 +167,7 @@ function onMsg(m){ if(!m||typeof m!=='object') return; const from=m.from|0, play
    case 's': { if(!play||!Array.isArray(m.p)) break; const p=byId(m.id|0); if(p&&!p.local) p.rp={x:+m.p[0],y:+m.p[1],vx:+m.p[2],vy:+m.p[3],age:0}; break; }
    case 'b': if(play&&m.e===G.epoch&&G.owner!==G.myId&&Array.isArray(m.b)){ const b=G.ball; b.x=+m.b[0];b.y=+m.b[1];b.vx=+m.b[2];b.vy=+m.b[3]; b.rot+=.05; const ph=['serve','rally','point'][m.ph]; if(ph&&!(G.phase==='point'&&ph!=='point')) G.phase=ph; G.touch=m.tc|0; G.lastSide=m.ls; } break;
    case 'ho': if(play&&m.e>G.epoch){ G.epoch=m.e; G.owner=m.to|0; const b=G.ball; b.x=+m.b[0];b.y=+m.b[1];b.vx=+m.b[2];b.vy=+m.b[3]; G.touch=m.tc|0; G.lastSide=m.ls==null?-1:m.ls; G.phase='rally'; G.hoT=.25; G.ballSide=b.x<50?0:1; } break;
-   case 'pt': if(play&&m.e>G.epoch&&Array.isArray(m.sc)){ G.epoch=m.e; G.score=[m.sc[0]|0,m.sc[1]|0]; G.phase='point'; G.pT=1.5; lastWin=m.w?1:0; G.decl=false; G.owner=-1; G.over=isOver(); pointFx(lastWin); } break;
+   case 'pt': if(play&&m.e>G.epoch&&Array.isArray(m.sc)){ G.epoch=m.e; G.score=[m.sc[0]|0,m.sc[1]|0]; G.phase='point'; G.pT=1.5; lastWin=m.w?1:0; G.decl=false; G.owner=-1; G.over=isOver(); pointFx(lastWin,m.why); } break;
    case 'sv': if(play&&m.e>G.epoch){ G.epoch=m.e; if(Array.isArray(m.si)) G.sIdx=[m.si[0]|0,m.si[1]|0]; startServe(m.srv|0); } break;
    case 'left': if(!isHost) playerLeft(m.id|0); break;
    case 'pi': if(isHost) send({t:'po',ts:m.ts},from); break;
