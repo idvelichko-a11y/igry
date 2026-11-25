@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Гра: рівний посів — веди трактор із сівалкою рівними смугами, оминаючи стовпи.">
+<meta name="theme-color" content="#1F4E5F">
+<title>Рівний посів</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: поле зверху на всю ширину (вид згори), під ним дві кнопки керма, далі список завдань */
+:root{
+  --bg:#F2F4F4; --card:#FFFFFF; --fg:#2C3E50; --mute:#66767F; --line:#D5DCDE;
+  --main:#1F4E5F; --accent:#C9A961; --on-main:#FFFFFF; --on-accent:#1B2A30;
+  --ov:rgba(14,26,31,.86); --ov-fg:#FFFFFF; --ov-mute:#C6D3D8; --star:#E3C77F; --star-off:rgba(255,255,255,.25);
+  --f-ui:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-head:"Unbounded","Manrope",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10181B; --card:#18232A; --fg:#E6ECEE; --mute:#93A3AA; --line:#2A3940;
+  --main:#86BACB; --accent:#D9BD7E; --on-main:#10181B; --on-accent:#1B2A30; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10181B; --card:#18232A; --fg:#E6ECEE; --mute:#93A3AA; --line:#2A3940;
+  --main:#86BACB; --accent:#D9BD7E; --on-main:#10181B; --on-accent:#1B2A30; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px;overscroll-behavior:none}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin:0}
+h1{font-family:var(--f-head);font-weight:700;font-size:clamp(1.1rem,3.4vw,1.7rem);line-height:1.2;margin:2px 0 0;color:var(--main)}
+h2{font-family:var(--f-head);font-weight:500;font-size:.95rem;margin:0;color:var(--main)}
+.stage{position:relative;background:#6FA25A;border-radius:14px;overflow:hidden;aspect-ratio:16/9;max-width:100%;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+@media (max-width:620px){.stage{aspect-ratio:4/3.2}}
+.stage>canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ov{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;padding:8px;background:rgba(10,20,24,.35)}
+.card{background:var(--ov);color:var(--ov-fg);border-radius:14px;padding:14px 16px;max-width:460px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:7px;text-align:center}
+.card h3{font-family:var(--f-head);font-weight:700;font-size:clamp(1rem,3.6vw,1.3rem);line-height:1.25;margin:0;text-wrap:balance}
+.card p{margin:0;font-size:.9rem;color:var(--ov-mute)}
+.card .k{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--star)}
+.stars{font-size:1.9rem;line-height:1;letter-spacing:.12em;color:var(--star-off)}
+.stars b{color:var(--star);font-weight:400}
+.nums{display:grid;grid-template-columns:1fr auto;gap:2px 14px;font-size:.88rem;text-align:left;font-variant-numeric:tabular-nums}
+.nums span:nth-child(even){text-align:right;font-weight:700}
+.btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.btns button{font:inherit;font-weight:800;font-size:1rem;padding:10px 20px;border-radius:999px;border:0;background:var(--star);color:#1B2A30;cursor:pointer}
+.btns button.sec{background:transparent;color:var(--ov-fg);border:1px solid rgba(255,255,255,.5)}
+.pad{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pad button{font:inherit;font-weight:800;font-size:1.05rem;min-height:60px;border-radius:12px;border:2px solid var(--main);background:var(--card);color:var(--main);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.pad button.on{background:var(--main);color:var(--on-main)}
+.row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row2 button{font:inherit;font-size:.84rem;font-weight:700;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
+.row2 .hint{font-size:.8rem;color:var(--mute);flex:1 1 200px;min-width:0}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.levels button{font:inherit;font-size:.84rem;text-align:left;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer;display:flex;flex-direction:column;gap:1px;min-width:0}
+.levels button i{font-style:normal;color:var(--accent);letter-spacing:.1em;font-size:.9rem}
+.levels button:disabled{opacity:.45;cursor:default}
+.levels button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.note{font-size:.8rem;color:var(--mute);margin:0}
+.sb{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));font:inherit;font-weight:800;font-size:.8rem;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(14,26,31,.6);color:#fff;cursor:pointer;z-index:5}
+#bExit{left:8px} #bDone{right:8px}
+.tc{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;padding:0 10px 9px;pointer-events:none;z-index:2}
+.tc button{pointer-events:auto;font:inherit;font-weight:800;font-size:1.6rem;line-height:1;width:92px;height:68px;padding:0;border-radius:16px;border:2px solid rgba(255,255,255,.8);background:rgba(14,26,31,.45);color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.tc button.on{background:rgba(227,199,127,.9);color:#1B2A30}
+body.big{overflow:hidden}
+body.big .wrap{position:fixed;inset:0;max-width:none;margin:0;z-index:50;background:var(--bg);gap:0;touch-action:none;
+  padding:env(safe-area-inset-top,0px) max(6px,env(safe-area-inset-right,0px)) max(6px,env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
+body.big .wrap>header, body.big .panel, body.big .row2, body.big .pad{display:none}
+body.big .stage{flex:1 1 auto;aspect-ratio:auto;min-height:0;height:auto;border-radius:10px}
+body.big.touch .tc{display:flex}
+body.big.rot .wrap{inset:auto;left:50%;top:50%;width:100vh;width:100dvh;height:100vw;height:100dvw;transform:translate(-50%,-50%) rotate(90deg);
+  padding:max(6px,env(safe-area-inset-right,0px)) max(6px,env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px)) max(6px,env(safe-area-inset-top,0px))}
+body.m .pad{display:none}
+@media (max-width:620px){ body.m:not(.big) .stage{aspect-ratio:auto;min-height:0} body.m:not(.big) .ov{position:relative} }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Поле зору · гра · проба 1</p>
+    <h1>Рівний посів</h1>
+  </header>
+  <div class="stage" id="stage">
+    <canvas id="c" aria-label="Гра: трактор із сівалкою засіває поле, вид згори"></canvas>
+    <button id="bExit" class="sb" hidden>✕ Згорнути</button>
+    <button id="bDone" class="sb" hidden>Готово ✓</button>
+    <div class="tc" id="tc"><button data-k="l" aria-label="Кермо ліворуч">◀</button><button data-k="r" aria-label="Кермо праворуч">▶</button></div>
+    <div class="ov" id="ov"><div class="card" id="card"></div></div>
+  </div>
+  <div class="pad">
+    <button id="bL" aria-label="Кермо ліворуч">◀ Ліворуч</button>
+    <button id="bR" aria-label="Кермо праворуч">Праворуч ▶</button>
+  </div>
+  <div class="row2">
+    <button id="bBig">⛶ На весь екран</button>
+    <button id="bSnd" aria-pressed="true">Звук: увімк.</button>
+    <span class="hint">На комп'ютері: стрілки ← → або A D. Трактор їде сам, ти лише кермуєш. Сівалка сама опускається на полі й піднімається за його межею.</span>
+  </div>
+  <div class="panel">
+    <h2>Завдання</h2>
+    <div class="levels" id="levels"></div>
+    <p class="note">Засій якнайбільше поля і не сій двічі по тому самому: темне — засіяно, червоне — посіяно двічі. Техніка намальована авторська, без марок.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id), TAU=Math.PI*2, clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const cv=$('c'), ctx=cv.getContext('2d');
+const WW=100, WH=56, CS=.5, GW=WW/CS, GH=WH/CS;           /* світ 100×56, клітинка 0,5 */
+const RECT=[[12,10],[88,10],[88,45],[12,45]];
+const LV=[
+ {n:'Перша смуга',tip:'Веди трактор рівними смугами. Розвертайся за межею поля: там сівалка сама піднімається.',poly:RECT,w:8.75,time:80},
+ {n:'Стовпи',tip:'На полі стоять опори. Об\'їжджай їх: удар забирає час і третю зірку.',poly:RECT,w:7,time:85,obs:[[34,20,.9],[58,33,.9],[74,17,.9]]},
+ {n:'Клин',tip:'Поле зрізане навскоси. Смуги різної довжини — стеж, де край.',poly:[[12,10],[88,10],[88,27],[46,45],[12,45]],w:7,time:80},
+ {n:'Обмаль насіння',tip:'Насіння в бункері рівно на поле. Кожна подвійна смуга — це порожній шматок наприкінці.',poly:RECT,w:7,time:95,seed:1.05},
+ {n:'Перед дощем',tip:'Хмара вже близько. Трактор іде швидше, часу менше.',poly:RECT,w:7,time:62,speed:16.5,rain:1},
+ {n:'Мочар',tip:'Посеред поля мокра низина. Там трактор грузне, а насіння пропадає — обійди.',poly:RECT,w:7,time:95,wet:[52,28,9,5.5],obs:[[24,36,1.2]]},
+ {n:'Схил',tip:'Поле на схилі: трактор зносить униз. Підрулюй угору.',poly:RECT,w:7,time:95,drift:1.6},
+ {n:'Нічна зміна',tip:'Темно. Видно тільки те, що у фарах. Не загуби свою смугу.',poly:RECT,w:7,time:100,night:1,obs:[[40,24,.9],[66,34,.9]]},
+];
+const S={mode:'menu',lv:0,t:0,x:5,y:14,a:0,sp:13,time:0,T:1,sown:0,over:0,waste:0,total:1,seed:0,seed0:0,hits:0,stun:0,dust:[],floats:[],seeding:false,frame:1,res:null};
+const inp={l:false,r:false}, key={};
+let inF=new Uint8Array(GW*GH), cnt=new Uint8Array(GW*GH), lastT=new Float32Array(GW*GH), stamp=new Int32Array(GW*GH);
+const map=document.createElement('canvas'); map.width=GW; map.height=GH; const mctx=map.getContext('2d'); let img=mctx.createImageData(GW,GH);
+const coarse=(()=>{try{return matchMedia('(pointer:coarse)').matches;}catch(e){return false;}})(); if(coarse) document.body.classList.add('touch');
+let best=LV.map(()=>0); try{const s=JSON.parse(localStorage.getItem('pz_posiv_v1')||'null'); if(Array.isArray(s)) best=LV.map((_,i)=>+s[i]||0);}catch(e){}
+function saveBest(){try{localStorage.setItem('pz_posiv_v1',JSON.stringify(best));}catch(e){}}
+function inPoly(p,x,y){ let c=false; for(let i=0,j=p.length-1;i<p.length;j=i++){ const a=p[i],b=p[j]; if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0]) c=!c; } return c; }
+function px(i,r,g,b){ const k=i*4; img.data[k]=r; img.data[k+1]=g; img.data[k+2]=b; img.data[k+3]=255; }
+function paintCell(i){ const gx=i%GW, gy=(i/GW)|0, f=inF[i], c=cnt[i], d=((gx*7+gy*13)%5)*3;
+  if(f===0){ img.data[i*4+3]=0; return; }
+  if(f===2){ if(c) px(i,70,84,96); else px(i,112-d,128-d,120-d); return; }
+  if(c===0) px(i,205-d,170-d,112-d); else if(c===1){ const s=(gy%2)*10; px(i,112-s,74-s,42-s); } else px(i,176,62,46); }
+function setup(i){ const c=LV[i]; S.lv=i; inF.fill(0); cnt.fill(0); lastT.fill(-9); stamp.fill(0); S.total=0;
+  for(let gy=0;gy<GH;gy++) for(let gx=0;gx<GW;gx++){ const x=(gx+.5)*CS,y=(gy+.5)*CS,k=gy*GW+gx; if(inPoly(c.poly,x,y)){ let f=1; if(c.wet){const dx=(x-c.wet[0])/c.wet[2],dy=(y-c.wet[1])/c.wet[3]; if(dx*dx+dy*dy<1) f=2;} inF[k]=f; if(f===1) S.total++; } }
+  for(let k=0;k<GW*GH;k++) paintCell(k); mctx.putImageData(img,0,0);
+  S.x=4; S.y=10+c.w/2; S.a=0; S.sp=c.speed||13; S.T=S.time=c.time; S.t=0; S.sown=S.over=S.waste=0; S.hits=0; S.stun=0; S.dust=[]; S.floats=[]; S.frame=1; S.res=null;
+  S.seed0=S.seed=c.seed?Math.round(S.total*c.seed):0; inp.l=inp.r=false; }
+function startLevel(i){ setup(i); S.mode='play'; if(coarse){ autoBig=true; setBig(true,true); } ui(); }
+function mark(cx,cy,nx,ny,w){ const c=LV[S.lv]; let any=false; const n=Math.ceil(w/.22); S.frame++;
+  for(let i=0;i<=n;i++){ const o=(i/n-.5)*w, x=cx+nx*o, y=cy+ny*o, gx=(x/CS)|0, gy=(y/CS)|0; if(gx<0||gy<0||gx>=GW||gy>=GH) continue; const k=gy*GW+gx; if(stamp[k]===S.frame) continue; stamp[k]=S.frame; const f=inF[k]; if(!f) continue;
+    if(c.seed&&S.seed<=0) continue; any=true;
+    if(f===2){ if(cnt[k]===0){cnt[k]=1; S.waste++; if(c.seed)S.seed--; paintCell(k);} lastT[k]=S.t; continue; }
+    if(cnt[k]===0){ cnt[k]=1; S.sown++; if(c.seed)S.seed--; paintCell(k); }
+    else if(cnt[k]===1&&S.t-lastT[k]>1.3&&Math.abs(o)<w/2-.8){ cnt[k]=2; S.over++; if(c.seed)S.seed--; paintCell(k); }
+    lastT[k]=S.t; }
+  return any; }
+function tick(dt){ const c=LV[S.lv]; S.t+=dt; S.time-=dt;
+  const dir=((inp.r||key.r)?1:0)-((inp.l||key.l)?1:0); S.a+=dir*2.25*dt;
+  let sp=S.sp; if(S.stun>0){S.stun-=dt; sp=0;} const gk=((S.y/CS)|0)*GW+((S.x/CS)|0); if(inF[gk]===2) sp*=.45;
+  const ox=S.x, oy=S.y; S.x+=Math.cos(S.a)*sp*dt; S.y+=Math.sin(S.a)*sp*dt+(c.drift&&sp?c.drift*dt:0);
+  S.x=clamp(S.x,2,WW-2); S.y=clamp(S.y,2,WH-2);
+  if(c.obs) for(const o of c.obs){ const dx=S.x-o[0], dy=S.y-o[1], d=Math.hypot(dx,dy), R=o[2]+1.7; if(d<R){ S.x=o[0]+dx/d*(R+.6); S.y=o[1]+dy/d*(R+.6); if(S.stun<=0){ S.hits++; S.stun=1; S.time-=3; S.floats.push({x:S.x,y:S.y,t:0,s:'Удар! −3 с'}); beep(110,0,.25,'sawtooth',.14); } } }
+  const bx=S.x-Math.cos(S.a)*3.4, by=S.y-Math.sin(S.a)*3.4; S.seeding=sp>0&&mark(bx,by,-Math.sin(S.a),Math.cos(S.a),c.w);
+  if(S.seeding&&Math.random()<dt*30) S.dust.push({x:bx+(Math.random()-.5)*c.w*.8,y:by+(Math.random()-.5)*c.w*.8,t:0});
+  for(const d of S.dust) d.t+=dt; if(S.dust.length&&S.dust[0].t>.7) S.dust.shift();
+  for(const f of S.floats){f.t+=dt;f.y-=3*dt;} S.floats=S.floats.filter(f=>f.t<1.4);
+  if(S.time<=0||S.sown/S.total>=.985||(c.seed&&S.seed<=0)) finish(S.time<=0?(c.rain?'Пішов дощ — сівбу зупинено':'Час вийшов'):(c.seed&&S.seed<=0&&S.sown/S.total<.985?'Насіння скінчилось':'Поле засіяне')); }
+function finish(why){ const cov=S.sown/S.total*100, ov=S.over/S.total*100; let st=cov<80?0:(cov>=95&&ov<=6&&S.hits===0)?3:(cov>=90&&ov<=12)?2:1;
+  S.res={cov:cov,ov:ov,st:st,why:why,hits:S.hits,waste:S.waste/S.total*100}; if(st>best[S.lv]){best[S.lv]=st; saveBest();}
+  S.mode='done'; inp.l=inp.r=false; if(st)[523,659,784].slice(0,st).forEach((f,i)=>beep(f,i*.16,.22,'triangle',.18)); else beep(150,0,.4,'sawtooth',.12); ui(); }
+
+/* звук */
+let AC=null, master=null, gEng=null, engO=null, sndOn=true;
+function audioInit(){ if(AC){ if(AC.state==='suspended') AC.resume(); return; } try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;return;}
+  master=AC.createGain(); master.gain.value=sndOn?.9:0; master.connect(AC.destination);
+  engO=AC.createOscillator(); engO.type='sawtooth'; engO.frequency.value=52; const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=230; gEng=AC.createGain(); gEng.gain.value=0; engO.connect(lp); lp.connect(gEng); gEng.connect(master); engO.start(); }
+function beep(f,delay,dur,type,vol){ if(!AC||!sndOn)return; const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain(); o.type=type; o.frequency.value=f; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.015); g.gain.exponentialRampToValueAtTime(.0008,t+dur); o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+.05); }
+function audioFrame(){ if(!AC)return; gEng.gain.setTargetAtTime(S.mode==='play'?.05:0,AC.currentTime,.15); engO.frequency.setTargetAtTime(S.stun>0?40:50+S.sp*.6+(S.seeding?4:0),AC.currentTime,.1); }
+
+/* малювання */
+let W=0,H=0,dpr=1,sc=1,offx=0,offy=0; const dark=document.createElement('canvas'), dctx=dark.getContext('2d');
+function resize(){ const cw=cv.clientWidth, chh=cv.clientHeight; if(cw<2||chh<2)return; dpr=Math.min(2,window.devicePixelRatio||1); W=Math.round(cw*dpr); H=Math.round(chh*dpr); if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;} sc=Math.min(W/WW,H/WH); offx=(W-WW*sc)/2; offy=(H-WH*sc)/2; }
+function rect(x,y,w,h,f){ctx.fillStyle=f;ctx.fillRect(x,y,w,h);}
+function circ(x,y,r,f){ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=f;ctx.fill();}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function txt(s,x,y,pxs,col,align,weight,font){ ctx.font=(weight||600)+' '+pxs+'px '+(font||'Manrope, system-ui, sans-serif'); ctx.textAlign=align||'left'; ctx.textBaseline='middle'; ctx.fillStyle=col; ctx.fillText(s,x,y); return ctx.measureText(s).width; }
+function draw(){ if(!W)return; const c=LV[S.lv]; ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle='#6FA25A'; ctx.fillRect(0,0,W,H);
+  ctx.setTransform(sc,0,0,sc,offx,offy);
+  /* трава навколо */
+  ctx.fillStyle='#7FB069'; ctx.fillRect(-60,-30,WW+120,WH+60); ctx.fillStyle='rgba(60,120,60,.35)'; for(let i=0;i<220;i++){ const x=((i*37.3)%(WW+100))-50, y=((i*53.7)%(WH+50))-25; ctx.fillRect(x,y,.3,.9); }
+  mctx.putImageData(img,0,0); ctx.imageSmoothingEnabled=true; ctx.drawImage(map,0,0,WW,WH);
+  /* межа поля */
+  ctx.beginPath(); c.poly.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.strokeStyle='rgba(60,40,20,.55)'; ctx.lineWidth=.35; ctx.stroke();
+  if(c.wet){ ctx.beginPath(); ctx.ellipse(c.wet[0],c.wet[1],c.wet[2]*.55,c.wet[3]*.5,0,0,TAU); ctx.fillStyle='rgba(120,160,190,.45)'; ctx.fill(); for(let i=0;i<6;i++){ ctx.strokeStyle='#4E7D46'; ctx.lineWidth=.25; const x=c.wet[0]+Math.cos(i*1.9)*c.wet[2]*.7, y=c.wet[1]+Math.sin(i*1.9)*c.wet[3]*.7; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+.3,y-1.6); ctx.moveTo(x+.6,y); ctx.lineTo(x+.7,y-1.2); ctx.stroke(); } }
+  if(c.drift){ ctx.fillStyle='rgba(255,255,255,.5)'; for(let i=0;i<5;i++){ const x=20+i*15, y=4.5+((S.t*2+i)%2); ctx.beginPath(); ctx.moveTo(x-1,y); ctx.lineTo(x+1,y); ctx.lineTo(x,y+1.4); ctx.fill(); } }
+  /* пил за сівалкою */
+  for(const d of S.dust){ ctx.globalAlpha=.35*(1-d.t/.7); circ(d.x,d.y,.5+d.t*1.6,'#E9D7A6'); } ctx.globalAlpha=1;
+  /* перешкоди */
+  if(c.obs) for(const o of c.obs){ circ(o[0]+.5,o[1]+.6,o[2]+.5,'rgba(0,0,0,.25)'); if(o[2]>1){ circ(o[0],o[1],o[2]+1.3,'#3F7D44'); circ(o[0]-.5,o[1]-.5,o[2]+.3,'#58A05B'); } else { circ(o[0],o[1],o[2]+.5,'#8A8F94'); circ(o[0],o[1],o[2],'#D9DDE0'); ctx.strokeStyle='#5A6166'; ctx.lineWidth=.22; ctx.beginPath(); ctx.moveTo(o[0]-1.8,o[1]); ctx.lineTo(o[0]+1.8,o[1]); ctx.stroke(); } }
+  /* трактор із сівалкою */
+  ctx.save(); ctx.translate(S.x,S.y); ctx.rotate(S.a); const w=c.w;
+  ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fillRect(-4.6,-w/2+.4,2.6,w); ctx.fillRect(-1.6,-1.3,5.4,3.4);
+  rect(-3.1,-.25,1.6,.5,'#2A2F32');                                   /* зчіпка */
+  rect(-4.9,-w/2,2.2,w,'#1F6F7F'); rect(-4.5,-w/2+.3,1.3,w-.6,'#2A8194'); ctx.fillStyle='#C9A961'; for(let o=-w/2+.6;o<w/2-.4;o+=1.15) ctx.fillRect(-4.3,o,.9,.7);
+  rect(-5.3,-w/2-.5,.9,1,'#22292C'); rect(-5.3,w/2-.5,.9,1,'#22292C');
+  rect(-1.8,-2.1,2.4,1,'#1E2326'); rect(-1.8,1.1,2.4,1,'#1E2326'); rect(2.1,-1.7,1.5,.7,'#1E2326'); rect(2.1,1,1.5,.7,'#1E2326');
+  ctx.fillStyle='#D2A63C'; rr(-1.9,-1.25,5.7,2.5,.5); ctx.fill(); rect(-1.2,-1.05,2.4,2.1,'#2B3338'); rect(-.8,-.8,1.6,1.6,'rgba(190,225,240,.85)'); rect(3.5,-.8,.3,1.6,'#8D6B1E');
+  ctx.restore();
+  for(const f of S.floats){ ctx.globalAlpha=1-f.t/1.4; ctx.save(); ctx.setTransform(1,0,0,1,0,0); txt(f.s,offx+f.x*sc,offy+f.y*sc,Math.max(12*dpr,W*.014),'#FFD2C8','center',800); ctx.restore(); ctx.globalAlpha=1; }
+  /* ніч */
+  if(c.night&&S.mode!=='menu'){ if(dark.width!==W||dark.height!==H){dark.width=W;dark.height=H;} dctx.setTransform(1,0,0,1,0,0); dctx.globalCompositeOperation='source-over'; dctx.fillStyle='rgba(6,10,24,.88)'; dctx.fillRect(0,0,W,H); dctx.globalCompositeOperation='destination-out';
+    const lx=offx+(S.x+Math.cos(S.a)*9)*sc, ly=offy+(S.y+Math.sin(S.a)*9)*sc, g=dctx.createRadialGradient(lx,ly,0,lx,ly,15*sc); g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(.6,'rgba(0,0,0,.85)'); g.addColorStop(1,'rgba(0,0,0,0)'); dctx.fillStyle=g; dctx.fillRect(0,0,W,H);
+    const tx=offx+S.x*sc, ty=offy+S.y*sc, g2=dctx.createRadialGradient(tx,ty,0,tx,ty,8*sc); g2.addColorStop(0,'rgba(0,0,0,.9)'); g2.addColorStop(1,'rgba(0,0,0,0)'); dctx.fillStyle=g2; dctx.fillRect(0,0,W,H);
+    ctx.setTransform(1,0,0,1,0,0); ctx.drawImage(dark,0,0); }
+  ctx.setTransform(1,0,0,1,0,0);
+  if(c.rain&&S.mode!=='menu'){ const st=clamp(1-S.time/S.T,0,1); ctx.fillStyle='rgba(30,40,60,'+(.5*st)+')'; ctx.fillRect(0,0,W*st*1.1,H); if(st>.75){ const k=(st-.75)/.25; ctx.strokeStyle='rgba(210,225,240,'+(.3+.3*k)+')'; ctx.lineWidth=dpr; ctx.beginPath(); for(let i=0;i<70*k;i++){const x=(i*97.7+S.t*500)%W,y=(i*153.3+S.t*1100)%H; ctx.moveTo(x,y); ctx.lineTo(x-6*dpr,y+18*dpr);} ctx.stroke(); } }
+  drawHUD(); }
+function bar(x,y,w,h,f,col){ rect(x,y,w,h,'rgba(14,26,31,.6)'); rect(x+1,y+1,(w-2)*clamp(f,0,1),h-2,col); }
+function drawHUD(){ if(S.mode==='menu')return; const c=LV[S.lv], fs=clamp(W*.0125,11*dpr,16*dpr), lh=fs*1.5, bw=fs*9, bh=fs*.6, top=Math.max(fs*2.9,40*dpr); let x=fs*.8, y=top+fs*.7;
+  const rows=3+(c.seed?1:0); ctx.fillStyle='rgba(14,26,31,.55)'; rr(fs*.3,top-fs*.1,bw+fs*10.5,lh*rows+fs*.5,fs*.6); ctx.fill();
+  txt((S.lv+1)+'. '+c.n,x,y,fs,'#fff','left',800); y+=lh;
+  const cov=S.sown/S.total, ov=S.over/S.total; bar(x,y-bh/2,bw,bh,cov,'#8FD08A'); txt('Засіяно '+Math.floor(cov*100)+'%',x+bw+fs*.5,y,fs,'#fff'); y+=lh;
+  bar(x,y-bh/2,bw,bh,ov*5,'#F0705A'); txt('Двічі '+Math.round(ov*100)+'%'+(S.hits?' · ударів '+S.hits:''),x+bw+fs*.5,y,fs,ov>.06?'#FFC2B6':'#fff'); y+=lh;
+  if(c.seed){ bar(x,y-bh/2,bw,bh,S.seed/S.seed0,'#E3C77F'); txt('Насіння '+Math.max(0,Math.round(S.seed/S.seed0*100))+'%',x+bw+fs*.5,y,fs,'#fff'); }
+  const sec=Math.max(0,Math.ceil(S.time)), tw=fs*8.5, tx=W-fs*.8-tw, ty=top+fs*.7; ctx.fillStyle='rgba(14,26,31,.55)'; rr(tx-fs*.5,top-fs*.1,tw+fs,lh*2+fs*.5,fs*.6); ctx.fill();
+  txt((c.rain?'До дощу ':'Час ')+Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'),W-fs*.8,ty,fs,S.time<10?'#FFC2B6':'#fff','right',800); bar(tx,ty+lh-bh/2,tw,bh,S.time/S.T,S.time<10?'#F0705A':'#86BACB');
+  if(S.mode==='play'&&S.t<4){ const s=S.lv===0?'Тримай ◀ або ▶, щоб повернути':c.tip.split('.')[0]; ctx.globalAlpha=Math.min(1,(4-S.t)); const w2=txt(s,-999,-999,fs*1.1,'#fff','center',700); ctx.fillStyle='rgba(14,26,31,.72)'; rr(W/2-w2/2-fs,H*.5-fs,w2+fs*2,fs*2,fs); ctx.fill(); txt(s,W/2,H*.5,fs*1.1,'#FFE7A8','center',700); ctx.globalAlpha=1; } }
+
+/* інтерфейс */
+const ov=$('ov'), card=$('card'); let autoBig=false;
+function starsHTML(n){return '<div class="stars" aria-label="Зірок: '+n+' з 3">'+'<b>★</b>'.repeat(n)+'★'.repeat(3-n)+'</div>';}
+function ui(){ const play=S.mode==='play'; if(autoBig&&S.mode==='menu') setBig(false); document.body.classList.toggle('m',!play); ov.hidden=play; $('bDone').hidden=!play;
+  const lv=$('levels'); lv.innerHTML=''; LV.forEach((c,i)=>{ const b=document.createElement('button'), open=i===0||best[i-1]>0; b.disabled=!open; if(i===S.lv&&S.mode!=='menu') b.className='on';
+    b.innerHTML='<span><b>'+(i+1)+'.</b> '+c.n+'</span><i>'+(open?'★'.repeat(best[i])+'☆'.repeat(3-best[i]):'закрито')+'</i>'; b.onclick=()=>intro(i); lv.appendChild(b); });
+  if(play){ setTimeout(resize,30); return; }
+  if(S.mode==='menu'){ card.innerHTML='<span class="k">Поле зору · гра</span><h3>Рівний посів</h3><p>Трактор із сівалкою їде сам — ти кермуєш. Засій поле рівними смугами: без пропусків і без подвійного посіву.</p><p>Вісім завдань: стовпи, клин, обмаль насіння, дощ, мочар, схил і нічна зміна.</p><div class="btns"><button id="go">Грати</button></div>';
+    $('go').onclick=()=>{audioInit(); const nx=best.findIndex(s=>s===0); intro(nx<0?0:nx);}; }
+  else if(S.mode==='intro'){ const c=LV[S.lv]; card.innerHTML='<span class="k">Завдання '+(S.lv+1)+' з '+LV.length+'</span><h3>'+c.n+'</h3><p>'+c.tip+'</p><p>Засій щонайменше 80% поля. Три зірки: 95% і більше, двічі — не більш як 6%, без ударів.</p><div class="btns"><button id="go">Поїхали</button></div>'; $('go').onclick=()=>{audioInit(); startLevel(S.lv);}; }
+  else if(S.mode==='done'){ const r=S.res, t=r.st===3?'Як по шнурку':r.st===2?'Добра робота':r.st===1?'Засіяно, але агроном бурчить':'Замало засіяно';
+    card.innerHTML='<span class="k">'+(S.lv+1)+'. '+LV[S.lv].n+' · '+r.why+'</span><h3>'+t+'</h3>'+starsHTML(r.st)+'<div class="nums"><span>Засіяно</span><span>'+Math.floor(r.cov)+'%</span><span>Посіяно двічі</span><span>'+r.ov.toFixed(1).replace('.',',')+'%</span>'+(r.hits?'<span>Ударів об перешкоди</span><span>'+r.hits+'</span>':'')+(r.waste>.2?'<span>Насіння в мочарі</span><span>'+r.waste.toFixed(1).replace('.',',')+'%</span>':'')+'</div>'+
+      '<div class="btns"><button class="sec" id="look">Глянути поле</button><button class="sec" id="again">Ще раз</button>'+(r.st>0?'<button id="next">'+(S.lv<LV.length-1?'Далі':'На початок')+'</button>':'')+'</div>';
+    $('again').onclick=()=>intro(S.lv); $('look').onclick=()=>{ ov.hidden=true; const back=()=>{ov.hidden=false; cv.removeEventListener('pointerdown',back);}; setTimeout(()=>cv.addEventListener('pointerdown',back),50); };
+    const nb=$('next'); if(nb) nb.onclick=()=>{ if(S.lv<LV.length-1) intro(S.lv+1); else {S.mode='menu'; ui();} }; }
+  setTimeout(resize,30); }
+function intro(i){ setup(i); S.mode='intro'; ui(); }
+function hold(el,k){ const dn=e=>{e.preventDefault(); audioInit(); if(S.mode!=='play')return; inp[k]=true; el.classList.add('on'); try{el.setPointerCapture(e.pointerId);}catch(_){}} , up=()=>{inp[k]=false; el.classList.remove('on');};
+  el.addEventListener('pointerdown',dn); el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('lostpointercapture',up); el.addEventListener('contextmenu',e=>e.preventDefault()); }
+hold($('bL'),'l'); hold($('bR'),'r'); document.querySelectorAll('#tc button').forEach(b=>hold(b,b.dataset.k));
+let stagePtr=null; cv.addEventListener('pointerdown',e=>{ if(S.mode!=='play')return; e.preventDefault(); audioInit(); const r=cv.getBoundingClientRect(), rot=document.body.classList.contains('rot'); const left=rot?(e.clientY-r.top)<r.height/2:(e.clientX-r.left)<r.width/2; stagePtr=e.pointerId; inp.l=left; inp.r=!left; try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+const stUp=e=>{ if(e.pointerId===stagePtr){stagePtr=null; inp.l=inp.r=false;} }; cv.addEventListener('pointerup',stUp); cv.addEventListener('pointercancel',stUp);
+const KM={ArrowLeft:'l',ArrowRight:'r',KeyA:'l',KeyD:'r'};
+window.addEventListener('keydown',e=>{ const k=KM[e.code]; if(k&&S.mode==='play'){key[k]=true;e.preventDefault();} else if((e.code==='Enter'||e.code==='Space')&&S.mode!=='play'&&document.activeElement===document.body){ const g=$('go')||$('next'); if(g){g.click();e.preventDefault();} } });
+window.addEventListener('keyup',e=>{ const k=KM[e.code]; if(k) key[k]=false; }); window.addEventListener('blur',()=>{key.l=key.r=inp.l=inp.r=false;});
+$('bDone').onclick=()=>{ if(S.mode==='play') finish('Завершено достроково'); };
+$('bSnd').onclick=()=>{sndOn=!sndOn; audioInit(); if(master) master.gain.value=sndOn?.9:0; $('bSnd').textContent='Звук: '+(sndOn?'увімк.':'вимк.'); $('bSnd').setAttribute('aria-pressed',sndOn?'true':'false');};
+function layoutBig(){ const b=document.body, big=b.classList.contains('big'); b.classList.toggle('rot',big&&coarse&&window.innerHeight>window.innerWidth*1.12); resize(); setTimeout(resize,90); setTimeout(resize,400); }
+function tryFs(){ const el=document.documentElement; try{ const r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ const pr=r.call(el); if(pr&&pr.then) pr.then(()=>{ try{ if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }).catch(()=>{}); } }catch(e){} }
+function setBig(v,fs){ document.body.classList.toggle('big',v); $('bExit').hidden=!v; if(v){ if(fs) tryFs(); } else { autoBig=false; try{ if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(()=>{}); }catch(e){} } layoutBig(); }
+$('bBig').onclick=()=>{audioInit(); setBig(true,true);}; $('bExit').onclick=()=>setBig(false);
+document.addEventListener('fullscreenchange',layoutBig); window.addEventListener('resize',layoutBig);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){inp.l=inp.r=false;} });
+
+let last=0;
+function frame(ts){ const dt=Math.min(.05,(ts-last)/1000||0); last=ts; if(S.mode==='play'&&!document.hidden){ let r=dt; while(r>1e-5&&S.mode==='play'){const s=Math.min(r,1/90); tick(s); r-=s;} } draw(); audioFrame(); requestAnimationFrame(frame); }
+setup(0); new ResizeObserver(resize).observe(cv); resize(); ui(); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>draw()); requestAnimationFrame(frame);
+window.__p={S:S,LV:LV,inp:inp,tick:tick,startLevel:startLevel,intro:intro};
+})();
+</script>
+
+</body>
+</html>
