@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Дрони над фермою</title>
-<meta name="description" content="3D-гра: керуй дроном над великою фермою. Етап 1 — вільний політ.">
+<meta name="description" content="3D-гра: дуель дронів над великою фермою. Удвох із двох телефонів або проти комп'ютера.">
 <meta name="theme-color" content="#1F4E5F">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -34,6 +34,7 @@ h1{font-family:var(--f-head);font-weight:700;font-size:clamp(1.1rem,3.4vw,1.7rem
 .stick{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:rgba(14,26,31,.25);pointer-events:none;z-index:3}
 .stick i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.8)}
 .tip{position:absolute;bottom:10px;width:44%;text-align:center;color:rgba(255,255,255,.85);font-size:.72rem;font-weight:700;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+body.m .tip,body.used .tip{display:none}
 #tipL{left:3%} #tipR{right:3%}
 .ov{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:8px;background:rgba(10,20,24,.35)}
 .card{background:var(--ov);color:var(--ov-fg);border-radius:14px;padding:12px 14px;max-width:620px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:8px;text-align:center}
@@ -60,14 +61,29 @@ body.big .stage{flex:1 1 auto;aspect-ratio:auto;min-height:0;height:auto;border-
 body.big.rot .wrap{inset:auto;left:50%;top:50%;width:100vh;width:100dvh;height:100vw;height:100dvw;transform:translate(-50%,-50%) rotate(90deg)}
 @media (max-width:620px),(orientation:landscape) and (max-height:520px){ body.m:not(.big) .stage{aspect-ratio:auto;min-height:0} body.m:not(.big) .ov{position:relative} }
 body:not(.touch) .tip{display:none}
+#hT{left:50%;transform:translateX(-50%);top:8px;background:rgba(14,26,31,.5);border-radius:10px;padding:4px 12px;text-align:center;min-width:170px}
+#hT .bar{height:7px;border-radius:4px;background:rgba(255,255,255,.25);overflow:hidden;margin:3px 0 1px} #hT .bar i{display:block;height:100%;background:#F0705A}
+#aim{position:absolute;left:50%;top:44%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid rgba(255,255,255,.7);border-radius:50%;pointer-events:none}
+#aim.lock{border-color:#FF4030;box-shadow:0 0 0 2px rgba(255,64,48,.35)}
+#tag{position:absolute;pointer-events:none;color:#fff;font-weight:800;font-size:.72rem;text-shadow:0 1px 3px rgba(0,0,0,.7);transform:translate(-50%,-100%);white-space:nowrap}
+#tag.off{font-size:1.5rem;color:#FF4030}
+.fb{position:absolute;right:14px;font:inherit;font-weight:800;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(200,60,40,.55);color:#fff;z-index:4;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#bFire{bottom:96px;width:78px;height:78px;font-size:.8rem} #bDash{bottom:184px;width:58px;height:58px;font-size:.66rem;background:rgba(40,120,200,.55);right:24px}
+.fb.cd{opacity:.4}
+body:not(.touch) .fb{display:none}
+.link{font-size:.82rem;background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;word-break:break-all;user-select:all;-webkit-user-select:all;color:#fff}
+.btns button.sec{background:transparent;color:var(--ov-fg);border:1px solid rgba(255,255,255,.5)}
+.code{font-family:var(--f-head);font-size:1.5rem;letter-spacing:.1em;color:var(--star)}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header><p class="eyebrow">Поле зору · гра · етап 1 — політ</p><h1>Дрони над фермою</h1></header>
+  <header><p class="eyebrow">Поле зору · гра · етап 2 — бій</p><h1>Дрони над фермою</h1></header>
   <div class="stage" id="stage">
     <canvas id="c" aria-label="Тривимірна ферма, вид із-за дрона"></canvas>
-    <div class="hud" id="hL"></div><canvas id="map" width="150" height="150"></canvas><div class="hud" id="hMsg"></div><div id="hit"></div>
+    <div class="hud" id="hL"></div><canvas id="map" width="150" height="150"></canvas><div class="hud" id="hT" hidden></div><div class="hud" id="hMsg"></div><div id="hit"></div><div id="aim" hidden></div><div id="tag" hidden></div>
+    <button id="bDash" class="fb" hidden>РИВОК</button><button id="bFire" class="fb" hidden>ВОГОНЬ</button>
     <div class="tip" id="tipL">ліва рука: летіти</div><div class="tip" id="tipR">права рука: поворот і висота</div>
     <button id="bExit" class="sb" hidden>✕ Згорнути</button><button id="bHome" class="sb" hidden>На старт ⟲</button>
     <div class="stick" id="sL" hidden><i></i></div><div class="stick" id="sR" hidden><i></i></div>
@@ -75,172 +91,12 @@ body:not(.touch) .tip{display:none}
   </div>
   <div class="row2">
     <button id="bBig">⛶ На весь екран</button><button id="bSnd" aria-pressed="true">Звук: увімк.</button><button id="bMenu" hidden>Змінити дрон</button>
-    <span class="hint">На комп'ютері: W A S D — летіти, ← → — поворот, ↑ ↓ — висота, R — на старт. На телефоні: лівий палець веде дрон, правий повертає і міняє висоту.</span>
+    <span class="hint">На комп'ютері: W A S D — летіти, ← → — поворот, ↑ ↓ — висота, F або клац мишею — вогонь, C — ривок (Оса), R — на старт. На телефоні: лівий палець веде дрон, правий повертає і міняє висоту; стріляє сам, коли приціл червоний.</span>
   </div>
 </div>
 <script src="../lib/three.min.js"></script>
-<script src="world.js"></script>
-<script>
-(function(){
-"use strict";
-const $=id=>document.getElementById(id), clamp=(v,a,b)=>v<a?a:v>b?b:v, RAD=Math.PI/180, GR=9.81, RHO=1.2, R0=.42;
-const coarse=(()=>{try{return matchMedia('(pointer:coarse)').matches;}catch(e){return false;}})(); if(coarse) document.body.classList.add('touch');
-/* маса кг, тяга/вага, макс. нахил °, швидкість нахилу °/с, поворот °/с, лобовий опір м², підйом/спуск м/с, стеля м, зависання с, гучність */
-const DR=[
- {n:'Шершень',w:'дріб',m:1.6,twr:2.6,tilt:35,rate:220,yaw:150,cda:.0715,vUp:6,vDn:5,ceil:60,hov:200,loud:.85,hz:150,col:0xD2A63C,d:'Середній у всьому. Слухняний, добре тримає вітер.'},
- {n:'Павук',w:'сітка',m:.9,twr:2.4,tilt:40,rate:200,yaw:140,cda:.07,vUp:5,vDn:4.5,ceil:90,hov:240,loud:.35,hz:170,col:0x7FB069,d:'Легкий і тихий, довго тримає заряд. Вітер зносить найсильніше.'},
- {n:'Оса',w:'таран',m:1,twr:3.6,tilt:48,rate:360,yaw:220,cda:.0375,vUp:8,vDn:7,ceil:35,hov:130,loud:.6,hz:195,col:0xC9503A,d:'Найшвидша і найверткіша. Низька стеля, заряд тане на очах.'},
- {n:'Джміль',w:'гармата',m:3.2,twr:1.9,tilt:18,rate:110,yaw:90,cda:.1,vUp:3.5,vDn:4,ceil:120,hov:170,loud:1,hz:95,col:0x3F5F8A,d:'Важкий: розганяється довго, зате вітер йому байдужий і стеля найвища.'},
-];
-DR.forEach(p=>{ p.vmax=Math.sqrt(2*p.m*GR*Math.tan(p.tilt*RAD)/(RHO*p.cda)); });
-let myCh=0; try{const v=+localStorage.getItem('pz_dr_ch'); if(v>=0&&v<4) myCh=v;}catch(e){}
-
-/* ---------- сцена ---------- */
-const cv=$('c'); let renderer=null, glOK=true;
-try{ renderer=new THREE.WebGLRenderer({canvas:cv,antialias:!coarse,powerPreference:'high-performance'}); }catch(e){ glOK=false; }
-const scene=new THREE.Scene(); scene.background=new THREE.Color(0xBFDDEB); scene.fog=new THREE.Fog(0xBFDDEB,160,560);
-const cam=new THREE.PerspectiveCamera(70,16/9,.12,800);
-scene.add(new THREE.HemisphereLight(0xdfeeff,0x55603f,.62)); const sun=new THREE.DirectionalLight(0xfff2d0,.5); sun.position.set(60,120,40); scene.add(sun);
-const W=buildWorld(THREE); scene.add(W.mesh);
-/* зарядки, мітки, тінь, вітровказ */
-const padG=new THREE.Group(); scene.add(padG); W.pads.forEach(p=>{ const m=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,.08,20),new THREE.MeshBasicMaterial({color:0x35C6D8})); m.position.set(p.x,p.y+.05,p.z); padG.add(m); const r=new THREE.Mesh(new THREE.TorusGeometry(1.6,.07,6,24),new THREE.MeshBasicMaterial({color:0xffffff})); r.rotation.x=Math.PI/2; r.position.set(p.x,p.y+.12,p.z); padG.add(r); });
-const markM=[]; W.marks.forEach(p=>{ const m=new THREE.Mesh(new THREE.TorusGeometry(.75,.11,8,20),new THREE.MeshBasicMaterial({color:0xFFD34D})); m.position.set(p[0],p[1],p[2]); scene.add(m); markM.push(m); });
-const shadow=new THREE.Mesh(new THREE.CircleGeometry(.55,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.35,depthWrite:false})); shadow.rotation.x=-Math.PI/2; scene.add(shadow);
-const sock=new THREE.Mesh(new THREE.ConeGeometry(.45,2.4,8),new THREE.MeshBasicMaterial({color:0xF07030})); sock.geometry.rotateX(Math.PI/2); sock.position.set(-10,21.6,30); scene.add(sock);
-/* модель дрона */
-let drone=null, props=[];
-function mkDrone(ch){ const p=DR[ch], g=new THREE.Group(), mat=new THREE.MeshLambertMaterial({color:p.col}), dk=new THREE.MeshLambertMaterial({color:0x22292C}), s=Math.cbrt(p.m/1.6); props=[];
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.34*s,.12*s,.46*s),mat); g.add(body); const nose=new THREE.Mesh(new THREE.BoxGeometry(.16*s,.08*s,.1*s),new THREE.MeshBasicMaterial({color:0xFF4030})); nose.position.set(0,0,-.26*s); g.add(nose);
-  for(const [ax,az] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const arm=new THREE.Mesh(new THREE.BoxGeometry(.05,.04,.5*s),dk); arm.position.set(ax*.2*s,0,az*.2*s); arm.rotation.y=ax*az*Math.PI/4; g.add(arm);
-    const pr=new THREE.Mesh(new THREE.CylinderGeometry(.19*s,.19*s,.015,14),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.35})); pr.position.set(ax*.36*s,.07,az*.36*s); g.add(pr); props.push(pr);
-    const bl=new THREE.Mesh(new THREE.BoxGeometry(.36*s,.012,.035),dk); bl.position.copy(pr.position); g.add(bl); props.push(bl); }
-  if(ch===0){ const b=new THREE.Mesh(new THREE.CylinderGeometry(.04,.06,.3,8),dk); b.rotation.x=Math.PI/2; b.position.set(0,-.08,-.3); g.add(b); }
-  if(ch===1){ const b=new THREE.Mesh(new THREE.BoxGeometry(.2,.1,.2),dk); b.position.set(0,-.1,-.12); g.add(b); }
-  if(ch===2){ const b=new THREE.Mesh(new THREE.ConeGeometry(.035,.75,6),new THREE.MeshLambertMaterial({color:0xC9CED2})); b.rotation.x=-Math.PI/2; b.position.set(0,0,-.6); g.add(b); }
-  if(ch===3){ const b=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.6,8),dk); b.rotation.x=Math.PI/2; b.position.set(0,-.12,-.3); g.add(b); }
-  return g; }
-
-/* ---------- стан і фізика ---------- */
-const SPAWN=[0,.42,20];
-const D={p:new THREE.Vector3(),v:new THREE.Vector3(),yaw:0,pitch:0,roll:0,batt:1,T:0,ground:true,spin:0};
-const G={mode:'menu',ch:0,t:0,wa:.6,ws:3,wx:0,wz:0,hitT:0,hits:0,got:0,left:[],msg:'',msgT:0,chg:false,indoor:false,corn:false,camYaw:0,dist:0,vtop:0};
-const I={mx:0,my:0,yaw:0,alt:0}, key={}; const nearL=[];
-function say(s,t){G.msg=s;G.msgT=t||2.5;}
-function reset(){ D.p.set(SPAWN[0],SPAWN[1],SPAWN[2]); D.v.set(0,0,0); D.yaw=0; D.pitch=D.roll=0; D.ground=true; G.camYaw=0; }
-function start(ch){ G.ch=ch; if(drone) scene.remove(drone); drone=mkDrone(ch); scene.add(drone); reset(); D.batt=1; G.t=0; G.hits=0; G.got=0; G.dist=0; G.vtop=0; G.left=W.marks.map((_,i)=>i); markM.forEach(m=>m.visible=true);
-  G.mode='play'; if(coarse){ autoBig=true; setBig(true,true); } ui(); say('Збери всі '+W.marks.length+' міток: вони в будівлях, на поверхах і в полі',4.5); }
-function hitFx(sp){ G.hits++; G.hitT=.35; beep(90+sp*4,0,.14,'sawtooth',.16); }
-function resolve(nx,ny,nz,pen){ D.p.x+=nx*pen; D.p.y+=ny*pen; D.p.z+=nz*pen; const vn=D.v.x*nx+D.v.y*ny+D.v.z*nz; if(vn<0){ if(-vn>3.2) hitFx(-vn); const k=1.2*vn; D.v.x-=k*nx; D.v.y-=k*ny; D.v.z-=k*nz; D.v.multiplyScalar(.985); } if(ny>.7){ D.ground=true; } }
-function collide(){ W.near(D.p.x,D.p.z,nearL); const cols=W.cols; for(let pass=0;pass<2;pass++) for(const idx of nearL){ const c=cols[idx], x=D.p.x,y=D.p.y,z=D.p.z;
-    if(c.r){ if(y<c.y0-R0||y>c.y1+R0) continue; const dx=x-c.x, dz=z-c.z, d=Math.hypot(dx,dz); if(d>=c.r+R0) continue;
-      if(y>=c.y0&&y<=c.y1){ if(d>1e-6) resolve(dx/d,0,dz/d,c.r+R0-d); } else if(d<c.r){ if(y>c.y1) resolve(0,1,0,c.y1+R0-y); else resolve(0,-1,0,y-(c.y0-R0)); } continue; }
-    const cx=clamp(x,c[0],c[3]), cy=clamp(y,c[1],c[4]), cz=clamp(z,c[2],c[5]), dx=x-cx, dy=y-cy, dz=z-cz, d2=dx*dx+dy*dy+dz*dz; if(d2>=R0*R0) continue;
-    if(d2>1e-10){ const d=Math.sqrt(d2); resolve(dx/d,dy/d,dz/d,R0-d); }
-    else { const px=Math.min(x-c[0],c[3]-x), py=Math.min(y-c[1],c[4]-y), pz=Math.min(z-c[2],c[5]-z); if(px<=py&&px<=pz) resolve(x-c[0]<c[3]-x?-1:1,0,0,px+R0); else if(py<=pz) resolve(0,y-c[1]<c[4]-y?-1:1,0,py+R0); else resolve(0,0,z-c[2]<c[5]-z?-1:1,pz+R0); } } }
-function step(dt){ const p=DR[G.ch], d=D; G.t+=dt;
-  /* вітер: напрям повільно гуляє, пориви */
-  G.wa+=.02*dt*Math.sin(G.t*.11); G.ws=3.2+2.2*Math.sin(G.t*.13)+1.6*Math.sin(G.t*.71+1)*Math.sin(G.t*.29); if(G.ws<0)G.ws=0; G.wx=Math.cos(G.wa)*G.ws; G.wz=Math.sin(G.wa)*G.ws;
-  const mx=clamp(I.mx+((key.d?1:0)-(key.a?1:0)),-1,1), my=clamp(I.my+((key.w?1:0)-(key.s?1:0)),-1,1), yw=clamp(I.yaw+((key.right?1:0)-(key.left?1:0)),-1,1), al=clamp(I.alt+((key.up?1:0)-(key.down?1:0)),-1,1);
-  d.yaw-=yw*p.yaw*RAD*dt;
-  const mt=p.tilt*RAD, rr=p.rate*RAD*dt, sy=Math.sin(d.yaw), cy=Math.cos(d.yaw); let tp=my*mt, tr=mx*mt;
-  /* утримання місця: без команди автопілот нахиляє дрон проти власного знесення */
-  if(Math.abs(mx)+Math.abs(my)<.05&&!d.ground){ const vf=-d.v.x*sy-d.v.z*cy, vr=d.v.x*cy-d.v.z*sy; tp=clamp(-vf*.13,-mt*.85,mt*.85); tr=clamp(-vr*.13,-mt*.85,mt*.85); }
-  d.pitch+=clamp(tp-d.pitch,-rr,rr); d.roll+=clamp(tr-d.roll,-rr,rr);
-  const  sp=Math.sin(d.pitch), sr=Math.sin(d.roll);
-  let ux=-sy*sp+cy*sr, uz=-cy*sp-sy*sr, uy=Math.cos(d.pitch)*Math.cos(d.roll); const ul=Math.hypot(ux,uy,uz); ux/=ul; uy/=ul; uz/=ul;
-  /* тяга: автомат висоти тримає задану вертикальну швидкість, але не більше, ніж дають мотори */
-  const sag=d.batt<=0?0:(d.batt<.15?.75+d.batt/.15*.25:1), ceilK=1-(1-1/p.twr)*Math.pow(clamp(d.p.y/p.ceil,0,1.25),2);
-  const Tmax=d.batt<=0?p.m*GR*.88:p.m*GR*p.twr*ceilK*sag, idle=d.ground&&al<=.05&&Math.abs(mx)+Math.abs(my)<.05;
-  let T; if(idle) T=p.m*GR*.1; else { const vyC=al>0?al*p.vUp:al*p.vDn, ay=clamp((vyC-d.v.y)*4,-9,14); T=clamp(p.m*(GR+ay)/Math.max(.35,uy),p.m*GR*.1,Tmax); }
-  d.T=T; const ge=d.p.y<1.3?1+.16*(1-d.p.y/1.3):1, a=T*ge/p.m;
-  /* опір повітря відносно вітру */
-  const zn=W.zoneAt(d.p.x,d.p.y,d.p.z); G.indoor=!!zn; const wx=zn?0:G.wx*clamp(d.p.y/6,.25,1), wz=zn?0:G.wz*clamp(d.p.y/6,.25,1);
-  const rx=d.v.x-wx, ry=d.v.y, rz=d.v.z-wz, rs=Math.hypot(rx,ry,rz), k=.5*RHO*p.cda/p.m;
-  d.v.x+=(ux*a-k*rs*rx)*dt; d.v.y+=(uy*a-GR-k*2.2*rs*ry)*dt; d.v.z+=(uz*a-k*rs*rz)*dt;
-  G.corn=W.inCorn(d.p.x,d.p.y,d.p.z); if(G.corn){ const f=Math.max(0,1-2.6*dt); d.v.x*=f; d.v.z*=f; d.v.y*=Math.max(0,1-1.2*dt); }
-  const ox=d.p.x, oz=d.p.z; d.p.x+=d.v.x*dt; d.p.y+=d.v.y*dt; d.p.z+=d.v.z*dt; d.ground=false;
-  collide();
-  if(d.p.y<R0){ if(d.v.y<-3.5) hitFx(-d.v.y); d.p.y=R0; if(d.v.y<0) d.v.y=0; d.ground=true; }
-  if(d.ground){ const f=Math.max(0,1-(idle?10:2.5)*dt); d.v.x*=f; d.v.z*=f; }
-  const L=W.LIM; if(Math.abs(d.p.x)>L){ d.v.x-=Math.sign(d.p.x)*12*dt; } if(Math.abs(d.p.z)>L){ d.v.z-=Math.sign(d.p.z)*12*dt; }
-  G.dist+=Math.hypot(d.p.x-ox,d.p.z-oz); const hs=Math.hypot(d.v.x,d.v.z); if(hs>G.vtop) G.vtop=hs;
-  /* заряд: потужність ~ тяга^1.5 */
-  d.batt=Math.max(0,d.batt-dt/p.hov*Math.pow(T/(p.m*GR),1.5)); G.chg=false;
-  for(const pd of W.pads){ if(Math.hypot(d.p.x-pd.x,d.p.z-pd.z)<1.9&&d.p.y-pd.y<1.6&&d.p.y>=pd.y&&d.v.length()<1.5){ d.batt=Math.min(1,d.batt+dt/9); G.chg=true; } }
-  for(let i=G.left.length-1;i>=0;i--){ const m=W.marks[G.left[i]]; if(Math.hypot(d.p.x-m[0],d.p.y-m[1],d.p.z-m[2])<1.5){ markM[G.left[i]].visible=false; G.left.splice(i,1); G.got++; beep(784,0,.12,'triangle',.16); beep(1047,.1,.18,'triangle',.16); say(G.left.length?'Мітка '+G.got+' з '+W.marks.length:'Усі мітки зібрано за '+fmtT(G.t)+'!',G.left.length?1.6:6); } }
-  if(G.hitT>0)G.hitT-=dt; if(G.msgT>0)G.msgT-=dt; }
-function fmtT(t){ return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
-
-/* ---------- камера і кадр ---------- */
-const tv=new THREE.Vector3();
-function place(){ const d=D; drone.position.copy(d.p); drone.rotation.set(0,0,0); drone.rotation.order='YXZ'; drone.rotation.y=d.yaw; drone.rotation.x=-d.pitch; drone.rotation.z=-d.roll;
-  d.spin+=.9+Math.sqrt(d.T/(DR[G.ch].m*GR))*1.6; for(let i=1;i<props.length;i+=2) props[i].rotation.y=d.spin*(i%4===1?1:-1);
-  let dy=G.camYaw-d.yaw; G.camYaw-=dy*.12; const sy=Math.sin(G.camYaw), cy=Math.cos(G.camYaw), back=G.indoor?2.3:3.6, up=G.indoor?.7:1.35;
-  let bx=d.p.x, by=d.p.y, bz=d.p.z; for(let i=1;i<=10;i++){ const f=i/10, x=d.p.x+sy*back*f, y=d.p.y+up*f, z=d.p.z+cy*back*f; if(W.inside(x,y,z,.18)||y<.2) break; bx=x; by=y; bz=z; }
-  cam.position.lerp(tv.set(bx,by,bz),.35); cam.lookAt(d.p.x-sy*5,d.p.y+.35,d.p.z-cy*5);
-  shadow.position.set(d.p.x,.03,d.p.z); let gy=0; for(const zz of W.zones){ /* тінь лягає на землю; усередині будівель — теж */ } shadow.material.opacity=clamp(.4-d.p.y*.008,.08,.4); shadow.scale.setScalar(1+d.p.y*.03);
-  sock.rotation.y=Math.atan2(G.wx,G.wz); sock.scale.set(1,1,.4+G.ws*.12);
-  for(const m of markM) if(m.visible) m.rotation.y=G.t*2; }
-function resize(){ const cw=cv.clientWidth, chh=cv.clientHeight; if(cw<2||chh<2||!renderer)return; renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,coarse?1.5:2)); renderer.setSize(cw,chh,false); cam.aspect=cw/chh; cam.updateProjectionMatrix(); }
-const mapC=$('map'), mx2=mapC.getContext('2d'); let mapT=0;
-function drawMap(){ const s=150/430, o=75; mx2.clearRect(0,0,150,150); mx2.fillStyle='rgba(120,160,90,.55)'; mx2.fillRect(0,0,150,150); mx2.fillStyle='rgba(205,190,150,.8)'; mx2.fillRect(o-95*s,o-80*s,190*s,155*s);
-  mx2.fillStyle='rgba(60,70,80,.9)'; for(const f of W.foot) mx2.fillRect(o+f[0]*s,o+f[1]*s,(f[2]-f[0])*s,(f[3]-f[1])*s);
-  mx2.fillStyle='#35C6D8'; for(const p of W.pads){ mx2.beginPath(); mx2.arc(o+p.x*s,o+p.z*s,2.6,0,7); mx2.fill(); }
-  mx2.fillStyle='#FFD34D'; for(const i of G.left){ const m=W.marks[i]; mx2.beginPath(); mx2.arc(o+m[0]*s,o+m[2]*s,2,0,7); mx2.fill(); }
-  mx2.save(); mx2.translate(o+clamp(D.p.x,-210,210)*s,o+clamp(D.p.z,-210,210)*s); mx2.rotate(-D.yaw); mx2.fillStyle='#fff'; mx2.strokeStyle='#C9503A'; mx2.lineWidth=1.5; mx2.beginPath(); mx2.moveTo(0,-6); mx2.lineTo(4,5); mx2.lineTo(0,2.5); mx2.lineTo(-4,5); mx2.closePath(); mx2.fill(); mx2.stroke(); mx2.restore(); }
-function hud(){ const p=DR[G.ch], hs=Math.hypot(D.v.x,D.v.z), wr=Math.atan2(G.wx,G.wz)-Math.atan2(-Math.sin(D.yaw),-Math.cos(D.yaw)), ar=['↑','↗','→','↘','↓','↙','←','↖'][((Math.round(wr/(Math.PI/4))%8)+8)%8];
-  $('hL').innerHTML='<b>'+p.n+'</b> · мітки '+G.got+'/'+W.marks.length+'<div class="bar"><i style="width:'+(D.batt*100).toFixed(0)+'%;background:'+(D.batt<.15?'#F0705A':G.chg?'#35C6D8':'#8FD08A')+'"></i></div>'+
-    'Заряд '+Math.round(D.batt*100)+'%'+(G.chg?' · заряджається':'')+'<br>Швидкість '+(hs*3.6).toFixed(0)+' км/год<br>Висота '+D.p.y.toFixed(0)+' м · стеля '+p.ceil+'<br>Вітер '+ar+' '+G.ws.toFixed(0)+' м/с'+(G.indoor?' · під дахом':'')+'<br><span style="opacity:.6">'+fps.toFixed(0)+' кадрів/с</span>';
-  let m=G.msgT>0?G.msg:''; if(!m){ if(D.batt<=0) m='Заряд скінчився. Натисни «На старт»'; else if(D.batt<.15) m='Заряд на межі — шукай блакитну зарядку'; else if(Math.abs(D.p.x)>W.LIM||Math.abs(D.p.z)>W.LIM) m='Сигнал слабшає — вертайся'; else if(G.corn) m='У кукурудзі: стебла гальмують'; else if(D.p.y>p.ceil*.92) m='Стеля: вище мотори не тягнуть'; }
-  $('hMsg').textContent=m; $('hit').style.opacity=G.hitT>0?(G.hitT/.35).toFixed(2):0; }
-
-/* ---------- звук ---------- */
-let AC=null, master=null, sndOn=true, o1=null,o2=null,gP=null,gW=null;
-function audioInit(){ if(AC){ if(AC.state==='suspended') AC.resume(); return; } try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;return;}
-  master=AC.createGain(); master.gain.value=sndOn?.9:0; master.connect(AC.destination);
-  o1=AC.createOscillator(); o2=AC.createOscillator(); o1.type='sawtooth'; o2.type='square'; const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900; gP=AC.createGain(); gP.gain.value=0; o1.connect(lp); o2.connect(lp); lp.connect(gP); gP.connect(master); o1.start(); o2.start();
-  const buf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate), dd=buf.getChannelData(0); for(let i=0;i<dd.length;i++) dd[i]=Math.random()*2-1; const ns=AC.createBufferSource(); ns.buffer=buf; ns.loop=true; const bp=AC.createBiquadFilter(); bp.type='lowpass'; bp.frequency.value=500; gW=AC.createGain(); gW.gain.value=0; ns.connect(bp); bp.connect(gW); gW.connect(master); ns.start(); }
-function beep(f,delay,dur,type,vol){ if(!AC||!sndOn)return; const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain(); o.type=type; o.frequency.value=f; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.012); g.gain.exponentialRampToValueAtTime(.0008,t+dur); o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+.05); }
-function audioFrame(){ if(!AC)return; const p=DR[G.ch], play=G.mode==='play', r=Math.sqrt(Math.max(.05,D.T/(p.m*GR))), t=AC.currentTime; o1.frequency.setTargetAtTime(p.hz*r,t,.05); o2.frequency.setTargetAtTime(p.hz*r*2.02,t,.05); gP.gain.setTargetAtTime(play?.05*p.loud*(.5+r*.5):0,t,.08);
-  gW.gain.setTargetAtTime(play?clamp(Math.hypot(D.v.x-G.wx,D.v.y,D.v.z-G.wz)/25,0,1)*.12:0,t,.1); }
-
-/* ---------- інтерфейс ---------- */
-const ov=$('ov'), card=$('card'); let autoBig=false;
-function ui(){ const play=G.mode==='play'; if(autoBig&&!play) setBig(false); document.body.classList.toggle('m',!play); ov.hidden=play; $('bHome').hidden=!play; $('bMenu').hidden=!play; $('hL').hidden=$('map').hidden=!play;
-  if(play){ setTimeout(resize,30); return; }
-  const bar=(l,v)=>'<span>'+l+'</span><i style="--w:'+Math.round(clamp(v,.08,1)*100)+'%"></i>';
-  card.innerHTML=(glOK?'':'<p>Цей пристрій не показує 3D у цьому вікні.</p>')+'<span class="k">Етап 1 · вільний політ</span><h3>Обери дрон</h3><div class="chars">'+DR.map((p,i)=>'<button data-ch="'+i+'" class="'+(i===myCh?'on':'')+'"><b>'+p.n+'</b><em>зброя на етапі 2: '+p.w+'</em><div class="stats">'+bar('Швидкість',p.vmax/22)+bar('Маневр',p.rate/360)+bar('Стеля',p.ceil/120)+bar('Заряд',p.hov/240)+bar('Проти вітру',1-(p.cda/p.m)/.085)+bar('Тиша',1-p.loud*.9)+'</div></button>').join('')+'</div><p>'+DR[myCh].d+'</p><p>Ферма велика: елеватор із поверхами та галереєю, корівник, сінник, майстерня, будинок із кімнатами. Усюди можна залетіти. Заряд тане швидше, що різкіше летиш; блакитні кола — зарядки.</p><div class="btns"><button id="go"'+(glOK?'':' disabled')+'>Летіти</button></div>';
-  card.querySelectorAll('button[data-ch]').forEach(b=>b.onclick=()=>{ myCh=+b.dataset.ch; try{localStorage.setItem('pz_dr_ch',myCh);}catch(e){} ui(); });
-  $('go').onclick=()=>{ audioInit(); start(myCh); }; setTimeout(resize,30); }
-/* джойстики: ліва половина — рух, права — поворот і висота */
-const st={}, SR=55;
-function loc(e){ const r=$('stage').getBoundingClientRect(), rot=document.body.classList.contains('rot'); return rot?{x:e.clientY-r.top,y:r.right-e.clientX,w:r.height,h:r.width}:{x:e.clientX-r.left,y:e.clientY-r.top,w:r.width,h:r.height}; }
-cv.addEventListener('pointerdown',e=>{ if(G.mode!=='play')return; e.preventDefault(); audioInit(); const l=loc(e), side=l.x<l.w/2?'L':'R'; if(st[side])return; st[side]={id:e.pointerId,x:l.x,y:l.y}; const el=$('s'+side); el.hidden=false; el.style.left=l.x+'px'; el.style.top=l.y+'px'; el.firstChild.style.transform=''; try{cv.setPointerCapture(e.pointerId);}catch(_){}} );
-cv.addEventListener('pointermove',e=>{ for(const side of ['L','R']){ const s=st[side]; if(!s||s.id!==e.pointerId) continue; const l=loc(e); let dx=(l.x-s.x)/SR, dy=(l.y-s.y)/SR; const m=Math.hypot(dx,dy); if(m>1){dx/=m;dy/=m;} $('s'+side).firstChild.style.transform='translate('+dx*SR*.6+'px,'+dy*SR*.6+'px)';
-    const dz=v=>Math.abs(v)<.12?0:(v-Math.sign(v)*.12)/.88; if(side==='L'){ I.mx=dz(dx); I.my=dz(-dy); } else { I.yaw=dz(dx); I.alt=dz(-dy); } } });
-const pUp=e=>{ for(const side of ['L','R']){ const s=st[side]; if(s&&s.id===e.pointerId){ st[side]=null; $('s'+side).hidden=true; if(side==='L'){I.mx=I.my=0;} else {I.yaw=I.alt=0;} } } };
-cv.addEventListener('pointerup',pUp); cv.addEventListener('pointercancel',pUp); cv.addEventListener('contextmenu',e=>e.preventDefault());
-const KM={KeyW:'w',KeyS:'s',KeyA:'a',KeyD:'d',ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',KeyQ:'left',KeyE:'right',Space:'up',ShiftLeft:'down',ShiftRight:'down'};
-window.addEventListener('keydown',e=>{ if(G.mode!=='play')return; const k=KM[e.code]; if(k){key[k]=true;e.preventDefault();audioInit();} else if(e.code==='KeyR'){ reset(); D.batt=Math.max(D.batt,.5); } });
-window.addEventListener('keyup',e=>{ const k=KM[e.code]; if(k) key[k]=false; }); window.addEventListener('blur',()=>{ for(const k in key) key[k]=false; });
-$('bHome').onclick=()=>{ reset(); D.batt=Math.max(D.batt,.5); say('На старті. Заряд поповнено до половини',2); };
-$('bMenu').onclick=()=>{ G.mode='menu'; ui(); };
-$('bSnd').onclick=()=>{sndOn=!sndOn; audioInit(); if(master) master.gain.value=sndOn?.9:0; $('bSnd').textContent='Звук: '+(sndOn?'увімк.':'вимк.'); $('bSnd').setAttribute('aria-pressed',sndOn?'true':'false');};
-function layoutBig(){ const b=document.body, big=b.classList.contains('big'); b.classList.toggle('rot',big&&coarse&&window.innerHeight>window.innerWidth*1.12); resize(); setTimeout(resize,90); setTimeout(resize,400); }
-function tryFs(){ const el=document.documentElement; try{ const r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ const pr=r.call(el,{navigationUI:'hide'}); if(pr&&pr.then) pr.then(()=>{ try{ if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }).catch(()=>{}); } }catch(e){} }
-function setBig(v,fs){ document.body.classList.toggle('big',v); $('bExit').hidden=!v; if(v){ if(fs) tryFs(); } else { autoBig=false; try{ if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(()=>{}); }catch(e){} } layoutBig(); }
-$('bBig').onclick=()=>{audioInit(); setBig(true,true);}; $('bExit').onclick=()=>setBig(false);
-document.addEventListener('fullscreenchange',layoutBig); window.addEventListener('resize',layoutBig);
-
-/* ---------- цикл ---------- */
-let last=0, fps=60;
-function frame(ts){ const dt=Math.min(.05,(ts-last)/1000||0); last=ts; if(dt>0) fps+=(1/dt-fps)*.05;
-  if(G.mode==='play'&&!document.hidden){ let r=dt; while(r>1e-5){ const s=Math.min(r,1/120); step(s); r-=s; } place(); hud(); mapT+=dt; if(mapT>.12){mapT=0; drawMap();} }
-  else if(drone){ G.t+=dt; } else { G.t+=dt; cam.position.set(Math.sin(G.t*.08)*90,38,Math.cos(G.t*.08)*90+10); cam.lookAt(0,6,-10); }
-  if(renderer) renderer.render(scene,cam); audioFrame(); requestAnimationFrame(frame); }
-new ResizeObserver(resize).observe(cv); resize(); ui(); requestAnimationFrame(frame);
-if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)||location.protocol==='file:') window.__d={D:D,G:G,I:I,W:W,DR:DR,step:step,start:start,place:place,hud:hud,cam:cam,fps:()=>fps,render:()=>renderer.render(scene,cam)};
-})();
-</script>
+<script src="../lib/peerjs.min.js"></script>
+<script src="world.js?v=2"></script>
+<script src="game.js?v=2"></script>
 </body>
 </html>
