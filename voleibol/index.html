@@ -2,10 +2,17 @@
 <html lang="uk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Агроволейбол</title>
 <meta name="description" content="Волейбол на двох: кукурудза, пшениця й соняшник. Грай з другом із двох телефонів або проти комп'ютера.">
 <meta name="theme-color" content="#1F4E5F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Агроволейбол">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Unbounded:wght@500;700&display=swap">
 <style>
 :root{
@@ -36,7 +43,7 @@ h1{font-family:var(--f-head);font-weight:700;font-size:clamp(1.1rem,3.4vw,1.7rem
   .pad button{min-height:48px}
 }
 .stage>canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px;background:rgba(10,20,24,.35)}
+.ov{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;padding:8px;background:rgba(10,20,24,.35)}
 .card{background:var(--ov);color:var(--ov-fg);border-radius:14px;padding:12px 14px;max-width:560px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:8px;text-align:center}
 .card h3{font-family:var(--f-head);font-weight:700;font-size:clamp(.95rem,3.4vw,1.3rem);line-height:1.25;margin:0}
 .card p{margin:0;font-size:.88rem;color:var(--ov-mute)}
@@ -66,13 +73,31 @@ h1{font-family:var(--f-head);font-weight:700;font-size:clamp(1.1rem,3.4vw,1.7rem
 .row2 button{font:inherit;font-size:.84rem;font-weight:700;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
 .row2 .hint{font-size:.8rem;color:var(--mute);flex:1 1 200px;min-width:0}
 button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-#bExit{position:absolute;left:8px;bottom:8px;font:inherit;font-weight:800;font-size:.8rem;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(14,26,31,.6);color:#fff;cursor:pointer;z-index:3}
+#bExit{position:absolute;left:8px;top:8px;font:inherit;font-weight:800;font-size:.8rem;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(14,26,31,.6);color:#fff;cursor:pointer;z-index:5}
 body.big{overflow:hidden}
 body.big .wrap{position:fixed;inset:0;max-width:none;margin:0;z-index:50;background:var(--bg);gap:6px;
   padding:env(safe-area-inset-top,0px) max(6px,env(safe-area-inset-right,0px)) max(6px,env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
 body.big .wrap>header, body.big .row2{display:none}
 body.big .stage{flex:1 1 auto;aspect-ratio:auto;min-height:0;height:auto;border-radius:10px}
-body.big .pad button{min-height:54px}
+body.big .pad, body.m .pad{display:none}
+@media (max-width:620px), (orientation:landscape) and (max-height:520px){
+  body.m:not(.big) .stage{aspect-ratio:auto;height:auto;min-height:0}
+  body.m:not(.big) .ov{position:relative}
+}
+body.big .wrap{touch-action:none}
+.tc{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;padding:0 10px 9px;pointer-events:none;z-index:2}
+.tc .g{display:flex;gap:8px;pointer-events:auto}
+.tc button{font:inherit;font-weight:800;font-size:1.5rem;line-height:1;width:64px;height:64px;padding:0;border-radius:16px;border:2px solid rgba(255,255,255,.8);background:rgba(14,26,31,.45);color:#fff;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.tc button.on{background:rgba(227,199,127,.9);color:#1B2A30}
+.tc button.w{width:124px}
+.tc.two .solo{display:none}
+.tc:not(.two) .duo{display:none}
+body.big.touch .tc{display:flex}
+body.big.rot .wrap{inset:auto;left:50%;top:50%;width:100vh;width:100dvh;height:100vw;height:100dvw;transform:translate(-50%,-50%) rotate(90deg);
+  padding:max(6px,env(safe-area-inset-right,0px)) max(6px,env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px)) max(6px,env(safe-area-inset-top,0px))}
+@media (orientation:landscape) and (max-height:520px){ .card{padding:8px 12px;gap:5px} .chars canvas{width:44px;height:54px} .cdesc{min-height:0} .btns button{padding:8px 16px} }
+body.big.rot .card{padding:8px 12px;gap:5px}
+body.big.rot .chars canvas{width:44px;height:54px}
 </style>
 </head>
 <body>
@@ -84,6 +109,10 @@ body.big .pad button{min-height:54px}
   <div class="stage" id="stage">
     <canvas id="c" aria-label="Волейбольний майданчик у полі"></canvas>
     <button id="bExit" hidden>✕ Згорнути</button>
+    <div class="tc" id="tc">
+      <div class="g"><button data-k="l0" aria-label="Ліворуч">◀</button><button data-k="r0" aria-label="Праворуч">▶</button><button data-k="j0" class="duo" aria-label="Стрибок лівого гравця">▲</button></div>
+      <div class="g"><button data-k="j0" class="solo w" aria-label="Стрибок">▲</button><button data-k="j1" class="duo" aria-label="Стрибок правого гравця">▲</button><button data-k="l1" class="duo" aria-label="Правий гравець ліворуч">◀</button><button data-k="r1" class="duo" aria-label="Правий гравець праворуч">▶</button></div>
+    </div>
     <div class="ov" id="ov"><div class="card" id="card"></div></div>
   </div>
   <div class="pad">
@@ -96,7 +125,7 @@ body.big .pad button{min-height:54px}
     <button id="bBig">⛶ На весь екран</button>
     <button id="bSnd" aria-pressed="true">Звук: увімк.</button>
     <button id="bMenu">У меню</button>
-    <span class="hint">На комп'ютері: ← → і ↑ (або A D і W). Гра до 11 очок: м'яч упав на твоєму боці — очко суперника.</span>
+    <span class="hint">На комп'ютері: ← → і ↑ (або A D і W). Гра до 11 очок: м'яч упав на твоєму боці — очко суперника. На телефоні гра сама розгортається на весь екран боком; щоб прибрати рядки браузера зовсім, додай сторінку на головний екран.</span>
   </div>
 </div>
 <script src="../lib/peerjs.min.js"></script>
@@ -117,7 +146,9 @@ const STN=['Зріст','Швидкість','Стрибок','Удар'];
 const G={mode:'menu',kind:'bot',me:0,flip:false,P:[null,null],ball:{x:25,y:20,vx:0,vy:0,rot:0},bd:{x:25,y:20},score:[0,0],phase:'serve',pT:0,server:0,touch:0,lastSide:-1,
   owner:0,epoch:0,decl:false,t:0,serveY:20,banner:'',bT:0,rp:null,rtt:0,again:[false,false],over:false,puffs:[],paused:false};
 let myCh=0; try{const v=+localStorage.getItem('pz_vol_ch'); if(v>=0&&v<3) myCh=v;}catch(e){}
-const key={}, tin={l:false,r:false}, jq=[false,false];
+const key={}, tin={l:false,r:false}, tin2={l:false,r:false}, jq=[false,false];
+const coarse=(()=>{try{return matchMedia('(pointer:coarse)').matches;}catch(e){return false;}})(); if(coarse) document.body.classList.add('touch');
+let autoBig=false, fsTried=false, wl=null;
 function mkP(side,ch){return {side:side,ch:ch,x:HOME[side],y:0,vx:0,vy:0,gr:true,jn:0,cd:0,sq:0};}
 G.P=[mkP(0,0),mkP(1,2)];
 
@@ -174,7 +205,7 @@ function botStep(p,dt){ const bot=p.bot||(p.bot={t:0,tx:HOME[p.side],st:0,err:0}
   updP(p,dt,dir,jump&&(p.gr||(c.dbl&&p.jn<2&&p.vy<0&&Math.random()<.2))); }
 
 /* ---------- крок гри ---------- */
-function dirOf(side){ if(G.kind==='local') return side===0?((key.d?1:0)-(key.a?1:0)):((key.right?1:0)-(key.left?1:0));
+function dirOf(side){ if(G.kind==='local') return side===0?(((key.d||tin.r)?1:0)-((key.a||tin.l)?1:0)):(((key.right||tin2.r)?1:0)-((key.left||tin2.l)?1:0));
   const d=((key.right||key.d||tin.r)?1:0)-((key.left||key.a||tin.l)?1:0); return G.flip?-d:d; }
 function step(dt){ G.t+=dt; if(tickCd>0)tickCd-=dt;
   for(const p of G.P){ if((G.kind==='bot'&&p.side!==G.me)||(G.auto&&isLocal(p.side))) botStep(p,dt); else if(isLocal(p.side)){ const j=jq[G.kind==='local'?p.side:0]; updP(p,dt,dirOf(p.side),j); } }
@@ -189,7 +220,7 @@ function step(dt){ G.t+=dt; if(tickCd>0)tickCd-=dt;
   for(const f of G.puffs) f.t+=dt; if(G.puffs.length&&G.puffs[0].t>.4) G.puffs.shift();
   if(G.bT>0) G.bT-=dt; }
 function startMatch(kind,me,chs){ G.kind=kind; G.me=me; G.flip=(kind!=='local'&&me===1); G.P=[mkP(0,chs[0]),mkP(1,chs[1])]; G.score=[0,0]; G.over=false; G.again=[false,false]; G.epoch=1; G.rp=null; G.puffs=[];
-  G.mode='play'; G.paused=false; startServe(0); G.bd.x=G.ball.x; G.bd.y=G.ball.y; ui(); }
+  G.mode='play'; G.paused=false; fsTried=false; if(coarse){ autoBig=true; setBig(true,true); } wake(); startServe(0); G.bd.x=G.ball.x; G.bd.y=G.ball.y; ui(); }
 function endMatch(){ G.mode='over'; const w=G.score[0]>G.score[1]?0:1; if(G.kind==='local'||w===G.me) [523,659,784,1047].forEach((f,i)=>beep(f,i*.14,.2,'triangle',.14)); else beep(160,0,.5,'sawtooth',.08); ui(); }
 
 /* ---------- мережа ---------- */
@@ -245,7 +276,8 @@ function beep(f,delay,dur,type,vol){ if(!AC||!sndOn)return; const t=AC.currentTi
 
 /* ---------- малювання ---------- */
 let W=0,H=0,u=1,HU=56,GYs=47,dpr=1;
-function resize(){ const r=cv.getBoundingClientRect(); if(r.width<2)return; dpr=Math.min(2,window.devicePixelRatio||1); W=Math.round(r.width*dpr); H=Math.round(r.height*dpr); cv.width=W; cv.height=H; u=W/100; HU=H/u; GYs=HU-Math.min(8,HU*.16); }
+function resize(){ const cw=cv.clientWidth, chh=cv.clientHeight; if(cw<2||chh<2)return; dpr=Math.min(2,window.devicePixelRatio||1); W=Math.round(cw*dpr); H=Math.round(chh*dpr); if(cv.width!==W||cv.height!==H){cv.width=W; cv.height=H;} u=W/100; HU=H/u;
+  const res=(coarse&&document.body.classList.contains('big'))?86*dpr/u:0; GYs=HU-Math.max(Math.min(8,HU*.16),res); }
 const sx=x=>G.flip?100-x:x;
 function poly(p,fill,stroke,lw){ctx.beginPath();ctx.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)ctx.lineTo(p[i],p[i+1]);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||.15;ctx.stroke();}}
 function rect(x,y,w,h,f){ctx.fillStyle=f;ctx.fillRect(x,y,w,h);}
@@ -316,7 +348,7 @@ function draw(){ if(!W)return; ctx.setTransform(u,0,0,u,0,0); ctx.clearRect(0,0,
   for(const f of G.puffs){ ctx.globalAlpha=.5*(1-f.t/.4); circ(sx(f.x)-1.2-f.t*4,GYs-f.y+.4,1+f.t*3,'#fff'); circ(sx(f.x)+1.2+f.t*4,GYs-f.y+.4,1+f.t*3,'#fff'); ctx.globalAlpha=1; }
   rect(fx-.45,fy-NH-.4,.9,NH+.4,'#8A5A2B'); rect(fx-.6,fy-NH-.9,1.2,.7,'#F2F4F4');
   drawBall(bx,by,G.ball.rot*(G.flip?-1:1));
-  if(by<-RB){ poly([bx-1.6,3.4, bx+1.6,3.4, bx,1],'#2F7D3B','#fff',.2); }
+  if(by<-RB){ const iy=Math.max(5,clamp(W*.0125,11*dpr,16*dpr)/u*3.4); poly([bx-1.6,iy+2.4, bx+1.6,iy+2.4, bx,iy],'#2F7D3B','#fff',.2); }
   drawHUD(); }
 function drawHUD(){ if(G.mode==='menu')return; const fs=clamp(W*.0125,11*dpr,16*dpr)/u, L=G.flip?1:0, R=1-L;
   const bw=fs*7.2, bh=fs*2.5; ctx.fillStyle='rgba(14,26,31,.62)'; rr(50-bw/2,1,bw,bh,fs*.6); ctx.fill();
@@ -329,17 +361,16 @@ function drawHUD(){ if(G.mode==='menu')return; const fs=clamp(W*.0125,11*dpr,16*
 
 /* ---------- інтерфейс ---------- */
 const ov=$('ov'), card=$('card'), invite=(Q.get('g')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5);
-const coarse=(()=>{try{return matchMedia('(pointer:coarse)').matches;}catch(e){return false;}})();
 function charPicker(){ let h='<div class="chars">'; CH.forEach((c,i)=>{ h+='<button data-ch="'+i+'" class="'+(i===myCh?'on':'')+'" aria-pressed="'+(i===myCh)+'"><canvas width="108" height="132" data-pc="'+i+'"></canvas><b>'+c.n+'</b><div class="stats">'+c.st.map((v,k)=>'<span>'+STN[k]+'</span><i style="--w:'+(v*20)+'%"></i>').join('')+'</div></button>'; });
   return h+'</div><p class="cdesc"><b>'+CH[myCh].sk+'.</b> '+CH[myCh].d+'</p>'; }
 function paintPortraits(){ card.querySelectorAll('canvas[data-pc]').forEach(c=>{ const o=ctx; ctx=c.getContext('2d'); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,108,132); const k=132/19.5; ctx.setTransform(k,0,0,k,54,128); drawChar(+c.dataset.pc,.5,-.3,0); ctx=o; });
   card.querySelectorAll('button[data-ch]').forEach(b=>b.onclick=()=>{ myCh=+b.dataset.ch; try{localStorage.setItem('pz_vol_ch',myCh);}catch(e){} audioInit(); ui(); }); }
-function ui(){ const play=G.mode==='play'; ov.hidden=play; $('bMenu').hidden=G.mode==='menu';
+function ui(){ const play=G.mode==='play'; if(autoBig&&(G.mode==='menu'||G.mode==='lobby')) setBig(false); $('tc').classList.toggle('two',G.kind==='local'); document.body.classList.toggle('m',!play); ov.hidden=play; setTimeout(resize,30); $('bMenu').hidden=G.mode==='menu';
   if(play) return;
   if(G.mode==='menu'){
     card.innerHTML='<span class="k">Поле зору · волейбол на двох</span><h3>'+(invite?'Тебе кличуть на матч':'Обери гравця')+'</h3>'+charPicker()+'<div class="btns">'+
       (invite?'<button id="mJoin">Приєднатися до гри</button><button class="sec" id="mBot">Проти комп\'ютера</button>'
-             :'<button id="mHost">Грати удвох онлайн</button><button class="sec" id="mBot">Проти комп\'ютера</button>'+(coarse?'':'<button class="sec" id="mLoc">Удвох на одній клавіатурі</button>'))+'</div>';
+             :'<button id="mHost">Грати удвох онлайн</button><button class="sec" id="mBot">Проти комп\'ютера</button>'+'<button class="sec" id="mLoc">'+(coarse?'Удвох на одному телефоні':'Удвох на одній клавіатурі')+'</button>')+'</div>';
     paintPortraits();
     const h=$('mHost'), j=$('mJoin'), l=$('mLoc');
     if(h) h.onclick=()=>{audioInit(); hostGame();}; if(j) j.onclick=()=>{audioInit(); joinGame(invite);};
@@ -373,15 +404,23 @@ window.addEventListener('keydown',e=>{ if(G.mode!=='play')return; const k=KM[e.c
   if(e.repeat){ if(e.code==='ArrowUp'||e.code==='Space')e.preventDefault(); return; }
   if(e.code==='KeyW'){jq[0]=true;} else if(e.code==='ArrowUp'||e.code==='Space'){ jq[G.kind==='local'&&e.code==='ArrowUp'?1:0]=true; e.preventDefault(); } audioInit(); });
 window.addEventListener('keyup',e=>{ const k=KM[e.code]; if(k) key[k]=false; });
-window.addEventListener('blur',()=>{ for(const k in key) key[k]=false; tin.l=tin.r=false; });
+window.addEventListener('blur',()=>{ for(const k in key) key[k]=false; tin.l=tin.r=tin2.l=tin2.r=false; });
 $('bSnd').onclick=()=>{sndOn=!sndOn; audioInit(); if(master) master.gain.value=sndOn?.9:0; $('bSnd').textContent='Звук: '+(sndOn?'увімк.':'вимк.'); $('bSnd').setAttribute('aria-pressed',sndOn?'true':'false');};
 $('bMenu').onclick=()=>{ netClose(); G.mode='menu'; ui(); };
-function setBig(v){ document.body.classList.toggle('big',v); $('bExit').hidden=!v;
-  if(v){ const el=document.documentElement; try{ const r=(el.requestFullscreen||el.webkitRequestFullscreen); if(r){ const pr=r.call(el); if(pr&&pr.catch) pr.catch(()=>{}); } }catch(e){} }
-  else { try{ if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(()=>{}); }catch(e){} }
-  setTimeout(resize,60); }
-$('bBig').onclick=()=>{audioInit(); setBig(true);}; $('bExit').onclick=()=>setBig(false);
-document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement&&document.body.classList.contains('big')) setBig(false); });
+function layoutBig(){ const b=document.body, big=b.classList.contains('big'); b.classList.toggle('rot',big&&coarse&&window.innerHeight>window.innerWidth*1.12); resize(); setTimeout(resize,90); setTimeout(resize,400); }
+function tryFs(){ const el=document.documentElement; try{ const r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ const pr=r.call(el,{navigationUI:'hide'}); if(pr&&pr.then) pr.then(()=>{ try{ if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }).catch(()=>{}); } }catch(e){} }
+function setBig(v,fs){ document.body.classList.toggle('big',v); $('bExit').hidden=!v;
+  if(v){ if(fs) tryFs(); } else { autoBig=false; try{ if(screen.orientation&&screen.orientation.unlock) screen.orientation.unlock(); }catch(e){} try{ if(document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen().catch(()=>{}); }catch(e){} }
+  layoutBig(); }
+function wake(){ try{ if(navigator.wakeLock&&!wl) navigator.wakeLock.request('screen').then(l=>{wl=l; l.addEventListener('release',()=>{wl=null;});}).catch(()=>{}); }catch(e){} }
+$('bBig').onclick=()=>{audioInit(); setBig(true,true);}; $('bExit').onclick=()=>setBig(false);
+document.addEventListener('fullscreenchange',layoutBig); window.addEventListener('resize',layoutBig); window.addEventListener('orientationchange',layoutBig);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&G.mode==='play') wake(); });
+window.addEventListener('touchend',()=>{ if(G.mode==='play'&&coarse&&document.body.classList.contains('big')&&!document.fullscreenElement&&!fsTried){ fsTried=true; tryFs(); } },{passive:true});
+document.querySelectorAll('#tc button').forEach(el=>{ const k=el.dataset.k, t=k[0], sd=+k[1];
+  const dn=e=>{ e.preventDefault(); audioInit(); el.classList.add('on'); if(t==='j') jq[G.kind==='local'?sd:0]=true; else (sd?tin2:tin)[t]=true; try{el.setPointerCapture(e.pointerId);}catch(_){} };
+  const up=()=>{ el.classList.remove('on'); if(t!=='j') (sd?tin2:tin)[t]=false; };
+  el.addEventListener('pointerdown',dn); el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('lostpointercapture',up); el.addEventListener('contextmenu',e=>e.preventDefault()); });
 window.addEventListener('pagehide',()=>{ netClose(); });
 
 /* ---------- цикл ---------- */

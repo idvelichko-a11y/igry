@@ -1,0 +1,26 @@
+{
+ "name": "Агроволейбол",
+ "short_name": "Агроволейбол",
+ "description": "Волейбол на двох: кукурудза, пшениця й соняшник.",
+ "start_url": "./",
+ "scope": "./",
+ "display": "fullscreen",
+ "orientation": "landscape",
+ "background_color": "#10181B",
+ "theme_color": "#1F4E5F",
+ "lang": "uk",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  }
+ ]
+}
