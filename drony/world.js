@@ -140,6 +140,36 @@ for(const t of [[-76,-18,1.1],[-76,2,1],[-52,-16,.9],[-80,-8,1.2],[-30,60,1],[30
   b=veh(60,-2,1); b(-.6,.5,-3.5,.6,.9,3.5,'#1F6F7F'); for(let i=-3;i<=3;i++) b(-.5,.9,i-.4,.5,1.7,i+.4,'#C9A961'); b.w(0,-3.7,.5,.25); b.w(0,3.7,.5,.25);
 })();
 
+/* ---------- те, за що можна зачепитись: дроти, мотузки, сітки, струмені зерна ---------- */
+const haz=[], extra=[];
+function segm(a,b,r,c){ const A=V3(a[0],a[1],a[2]), B=V3(b[0],b[1],b[2]), d=B.clone().sub(A), len=d.length(); q.setFromUnitVectors(V3(0,1,0),d.clone().normalize()); m4.compose(A.clone().add(B).multiplyScalar(.5),q,sc.set(r,len,r)); push(ucyl(5),m4,c); return len; }
+function wire(a,b,balls){ const len=segm(a,b,.035,'#23282B'); haz.push({t:'w',a:a,b:b}); if(balls!==false){ const nb=Math.floor(len/10); for(let i=1;i<=nb;i++){ const f=i/(nb+1); m4.makeScale(.24,.24,.24); m4.setPosition(a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f); push(new THREE.IcosahedronGeometry(1,0),m4,'#F07030'); } } }
+function rope(a,b){ segm(a,b,.04,'#D8C49A'); haz.push({t:'r',a:a,b:b}); }
+function net(x0,y0,z0,x1,y1,z1){ haz.push({t:'n',x0:x0,y0:y0,z0:z0,x1:x1,y1:y1,z1:z1}); const pts=[], st=.6, flatY=(y1-y0)<.3, flatX=(x1-x0)<.3;
+  if(flatY){ const y=(y0+y1)/2; for(let x=x0;x<=x1+.01;x+=st) pts.push(x,y,z0,x,y,z1); for(let z=z0;z<=z1+.01;z+=st) pts.push(x0,y,z,x1,y,z); }
+  else if(flatX){ const x=(x0+x1)/2; for(let z=z0;z<=z1+.01;z+=st) pts.push(x,y0,z,x,y1,z); for(let y=y0;y<=y1+.01;y+=st) pts.push(x,y,z0,x,y,z1); }
+  else { const z=(z0+z1)/2; for(let x=x0;x<=x1+.01;x+=st) pts.push(x,y0,z,x,y1,z); for(let y=y0;y<=y1+.01;y+=st) pts.push(x0,y,z,x1,y,z); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3)); extra.push(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xF2F4F4,transparent:true,opacity:.75}))); }
+function grain(x,z,r,y0,y1,pile){ haz.push({t:'g',x:x,z:z,r:r,y0:y0,y1:y1}); const m=new THREE.Mesh(new THREE.CylinderGeometry(r*.8,r,y1-y0,8,1,true),new THREE.MeshBasicMaterial({color:0xE8B93E,transparent:true,opacity:.8,side:THREE.DoubleSide})); m.position.set(x,(y0+y1)/2,z); m.userData.grain=true; extra.push(m);
+  if(pile){ m4.makeScale(pile,pile*.55,pile); m4.setPosition(x,pile*.275,z); push(new THREE.ConeGeometry(1,1,10).toNonIndexed(),m4,'#E0B450'); cols.push({x:x,z:z,r:pile*.6,y0:0,y1:pile*.3}); } }
+/* лінія вздовж дороги (два дроти) і відводи до будівель */
+haz.push({t:'w',a:[-180,7.5,67],b:[180,7.5,67]}); for(let x=-165;x<=165;x+=30){ m4.makeScale(.24,.24,.24); m4.setPosition(x,7.5,67); push(new THREE.IcosahedronGeometry(1,0),m4,'#F07030'); }
+wire([-180,6.6,67],[180,6.6,67],false);
+wire([-60,7.5,67],[-51,5.5,36.3]); wire([30,7.5,67],[40,9,42.3]); wire([0,7.5,67],[-10,14,32.3]); wire([-42,5.5,24],[-58,6.2,-1.8]); wire([-62,6.3,-12.2],[-55,7.3,-27.4]); wire([50,5.9,-20],[45,5,-43.8]); wire([52,5.9,8.4],[46,9,29.8]);
+/* розтяжки водонапірної вежі */
+wire([-12,13.8,28],[-24,.1,22],false); wire([-8,13.8,32],[-2,.1,46],false); wire([-12,13.8,32],[-22,.1,42],false); wire([-8,13.8,28],[-4,.1,14],false);
+/* мотузки й ланцюги */
+box(-57.1,0,-19.1,-56.9,2.3,-18.9,'#8A6A44'); box(-50.1,0,-19.1,-49.9,2.3,-18.9,'#8A6A44'); rope([-57,2.15,-19],[-50,2.15,-19]); for(let i=0;i<4;i++) box(-56+i*1.5,1.3,-19.03,-55.2+i*1.5,2.1,-18.97,['#F2EFE8','#6E8FA8','#C96A4A','#F2EFE8'][i],false);
+rope([33.2,9.6,33.2],[33.2,1.2,33.2]); rope([38,10.6,33],[38,6,33]); rope([-56,4.95,30],[-56,2,30]); rope([22,4.3,-53],[68,4.3,-53]); rope([-76,3.2,-17],[-76,3.2,1]); rope([-38,5.5,-39.6],[-38,5.5,-28.4]);
+/* сітки */
+for(const pp of [[22,-40],[60,-40],[22,-30],[60,-30],[41,-40],[41,-30]]) box(pp[0]-.08,0,pp[1]-.08,pp[0]+.08,3.5,pp[1]+.08,'#8A6A44',pp[0]===41);
+net(22,3.4,-40,60,3.5,-30);
+box(26.9,0,43.9,27.1,4.1,44.1,'#8A6A44'); box(26.9,0,53.9,27.1,4.1,54.1,'#8A6A44'); net(26.95,0,44,27.05,4,54);
+net(49.95,2.6,-26,50.05,5.5,-15);
+for(const pp of [[54,17],[64,17],[54,31],[64,31]]) box(pp[0]-.1,0,pp[1]-.1,pp[0]+.1,5.1,pp[1]+.1,'#6E7378'); net(54,5,17,64,5.1,31);
+/* зерно: труба в проїзді, викид із вежі на купу, шнек комбайна */
+grain(-55,-34,.45,2.4,3.7,0); cylH(-15.5,12.4,-50,.35,5,'x','#7C8288',8); grain(-13,-50,.6,1.2,12.3,3.2); grain(5.6,-22.75,.4,.5,4.9,1.6);
+
 /* ---------- мітки для обльоту ---------- */
 marks.push([-22,15,-50],[-55,20.5,-50],[-48,21.5,-50.2],[45,2.4,-53],[8,1.9,10],[-61,4.6,-9.5],[-67,1.5,-5],[42,6.6,36],[-46.5,2,31],[-10,10,30],[0,1.3,-120],[62,2.6,-12],[0,45,10],[-46,4.2,-34]);
 pads.push({x:0,y:.08,z:36,n:'двір'},{x:76,y:.08,z:-52,n:'за корівником'});
@@ -155,5 +185,5 @@ function near(x,z,out){ out.length=0; const i=Math.floor(x/CELL), j=Math.floor(z
 function inside(x,y,z,pad){ const l=near(x,z,[]); for(const idx of l){ const c=cols[idx]; if(c.r){ if(y>c.y0-pad&&y<c.y1+pad&&Math.hypot(x-c.x,z-c.z)<c.r+pad) return true; } else if(x>c[0]-pad&&x<c[3]+pad&&y>c[1]-pad&&y<c[4]+pad&&z>c[2]-pad&&z<c[5]+pad) return true; } return false; }
 function zoneAt(x,y,z){ for(const zz of zones) if(x>zz.x0&&x<zz.x1&&z>zz.z0&&z<zz.z1&&y<zz.h) return zz; return null; }
 function inCorn(x,y,z){ if(y>2.5) return false; for(const f of fields) if(x>f.x0&&x<f.x1&&z>f.z0&&z<f.z1){ const t=f.along==='x'?z-f.z0:x-f.x0, m=((t-1)%2+2)%2; return m<.4||m>1.6; } return false; }
-return {mesh:mesh,cols:cols,near:near,inside:inside,zones:zones,zoneAt:zoneAt,inCorn:inCorn,pads:pads,marks:marks,foot:foot,fields:fields,verts:P.length/3,LIM:205};
+return {mesh:mesh,cols:cols,near:near,inside:inside,zones:zones,zoneAt:zoneAt,inCorn:inCorn,pads:pads,marks:marks,foot:foot,fields:fields,haz:haz,extra:extra,verts:P.length/3,LIM:205};
 };
