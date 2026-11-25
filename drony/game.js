@@ -1,6 +1,9 @@
 /* Дрони над фермою — етап 8: п'ятий дрон «Бабка» (снайпер); кімната до 6 гравців, команди 3 на 3, комп'ютери в командах; політ, зброя, гвинти, дроти, дощ, режими, артефакти, шум, лабіринт, птахи, хмари, туман */
 (function(){
 "use strict";
+const VER=(()=>{ try{ const m=/game\.js\?v=(\d+)/.exec(document.currentScript.src); return m?+m[1]:0; }catch(e){ return 0; } })();
+(async()=>{ try{ const t=await (await fetch(location.pathname+'?fresh='+Date.now(),{cache:'no-store'})).text(), m=/game\.js\?v=(\d+)/.exec(t), nv=m?+m[1]:0; let done=''; try{ done=sessionStorage.getItem('pz_dr_upd')||''; }catch(e){}
+  if(nv>VER&&done!==String(nv)){ try{ sessionStorage.setItem('pz_dr_upd',String(nv)); }catch(e){} location.reload(); } }catch(e){} })();
 const $=id=>document.getElementById(id), clamp=(v,a,b)=>v<a?a:v>b?b:v, RAD=Math.PI/180, GR=9.81, RHO=1.2, R0=.42, WIN=3;
 const coarse=(()=>{try{return matchMedia('(pointer:coarse)').matches;}catch(e){return false;}})(); if(coarse) document.body.classList.add('touch');
 const Q=new URLSearchParams(location.search), isLoc=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
@@ -318,16 +321,15 @@ function step(dt){ G.t+=dt;
   if(G.rain>0){ G.rain-=dt; if(G.rain<=0){ say('Дощ минув',2.5); if(auth()) fogStart(); } }
   if(G.fog){ G.fog.t-=dt; if(G.fog.t<=0) G.fog=null; }
   birdStep(dt);
-  const inp=me.inp; inp.mx=clamp(I.mx+((key.d?1:0)-(key.a?1:0)),-1,1); inp.my=clamp(I.my+((key.w?1:0)-(key.s?1:0)),-1,1); inp.yaw=clamp(I.yaw+((key.right?1:0)-(key.left?1:0)),-1,1); const scoped=me.ch===4&&me.zoom>0; if(scoped&&(me.dead||me.tang>0)) scopeOff(); inp.alt=scoped?clamp((key.up?1:0)-(key.down?1:0),-1,1):clamp(I.alt+((key.up||key.aup?1:0)-(key.down||key.adn?1:0)),-1,1); if(scoped) me.el=clamp(me.el+(I.alt+((key.aup?1:0)-(key.adn?1:0)))*(me.zoom===2?11:22)*RAD*dt,-1.15,.75); inp.dash=I.dash||!!key.dash;
+  const inp=me.inp; inp.mx=clamp(I.mx+((key.d?1:0)-(key.a?1:0)),-1,1); inp.my=clamp(I.my+((key.w?1:0)-(key.s?1:0)),-1,1); inp.yaw=clamp(I.yaw+((key.right?1:0)-(key.left?1:0)),-1,1); const scoped=me.ch===4&&me.zoom>0; if(scoped&&(me.dead||me.tang>0)) scopeOff(); inp.alt=scoped?clamp((key.up?1:0)-(key.down?1:0),-1,1):clamp(I.alt+((key.up||key.aup?1:0)-(key.down||key.adn?1:0)),-1,1); if(scoped) me.el=clamp(me.el+(I.alt+((key.aup?1:0)-(key.adn?1:0)))*(me.zoom===2?11:22)*RAD*dt,-1.15,.75); inp.dash=I.dash||!!key.dash||!!I.dashTap; I.dashTap=false;
   if(G.autoMe&&foe) botThink(me,foe,botS[0],dt);
   stepD(me,dt);
   for(const d of D){ if(d===me) continue; if(d.bot&&d.local){ const bt=botTarget(d); d.tgt=bt; botThink(d,bt,d.bs,dt); stepD(d,dt); botRam(d); } else remoteStep(d,dt); }
   if(D.length>1){ ramCheck(); ramBase(); if(G.autoMe){ foe=D.find(d=>isEnemy(d)&&!d.dead)||D.find(isEnemy)||null; } else { const tg=pickTarget(); me.tgt=tg; if(me.ch===4){ me.aimT=0; me.aimId=null; const want=I.fire||!!key.fire; if((I.fireTap||(want&&!G.fireHeld))&&me.cd<=0&&G.phase==='fight'&&me.tang<=0) snipe(me); G.fireHeld=want; }
-      else if((I.fire||key.fire||(G.auto&&me.lock))&&(me.ch===2?me.hcd:me.cd)<=0&&G.phase==='fight') fire(me,tg,false,tB.clone()); }
-    I.fireTap=false;
+      else if((I.fire||key.fire||I.fireTap||(G.auto&&me.lock))&&(me.ch===2?me.hcd:me.cd)<=0&&G.phase==='fight') fire(me,tg,false,tB.clone()); }
     G.aimed=D.some(q=>{ if(q.ch!==4||q.side===me.side||q.dead) return false; if(q.aimT>0&&q.aimId===me.id) return true; if(!q.zoom||!q.ld) return false; tA.copy(me.p).sub(q.p); const al=tA.dot(q.ld); return al>2&&al<q.le+2&&Math.sqrt(Math.max(0,tA.lengthSq()-al*al))<2.2; }); if(G.aimed&&!me.dead){ G.warnT=(G.warnT||0)-dt; if(G.warnT<=0){ G.warnT=.4; beep(1250,0,.06,'square',.12); } }
     detect(dt); pkStep(dt); }
-  stepShots(dt);
+  I.fireTap=false; stepShots(dt);
   if(G.kind==='free'){ for(let i=G.left.length-1;i>=0;i--){ const m=W.marks[G.left[i]]; if(Math.hypot(me.p.x-m[0],me.p.y-m[1],me.p.z-m[2])<1.5){ markM[G.left[i]].visible=false; G.left.splice(i,1); G.got++; beep(784,0,.12,'triangle',.16); beep(1047,.1,.18,'triangle',.16); say(G.left.length?'Мітка '+G.got+' з '+W.marks.length:'Усі мітки зібрано за '+fmtT(G.t)+'!',G.left.length?1.6:6); } } }
   else if(G.rule==='duel') duelRules(dt); else contRules(dt);
   if(G.hitT>0)G.hitT-=dt; if(G.msgT>0)G.msgT-=dt; }
@@ -473,7 +475,7 @@ function ui(){ const play=G.mode==='play'; if(autoBig&&!play) setBig(false); doc
   if(play){ setTimeout(resize,30); return; }
   const bar=(l,v)=>'<span>'+l+'</span><i style="--w:'+Math.round(clamp(v,.08,1)*100)+'%"></i>';
   if(G.mode==='menu'){
-    card.innerHTML=(glOK?'':'<p>Цей пристрій не показує 3D у цьому вікні.</p>')+'<span class="k">Бій дронів над фермою</span><h3>Обери дрон</h3><div class="chars">'+DR.map((p,i)=>'<button data-ch="'+i+'" class="'+(i===myCh?'on':'')+'"><b>'+p.n+'</b><em>'+p.w+'</em><div class="stats">'+bar('Швидкість',p.vmax/26.5)+bar('Маневр',p.rate/432)+bar('Стеля',p.ceil/140)+bar('Заряд',p.hov/240)+bar('Проти вітру',1-(p.cda/p.m)/.085)+bar('Тиша',1-p.loud*.9)+bar('Гвинти',p.pt/1.6)+'</div></button>').join('')+'</div>'+(p=>'<div class="stats selst">'+bar('Швидкість',p.vmax/26.5)+bar('Маневр',p.rate/432)+bar('Стеля',p.ceil/140)+bar('Заряд',p.hov/240)+bar('Проти вітру',1-(p.cda/p.m)/.085)+bar('Тиша',1-p.loud*.9)+bar('Гвинти',p.pt/1.6)+'</div>')(DR[myCh])+'<p>'+DR[myCh].d+' <b style="color:var(--star)">'+DR[myCh].wd+'</b></p>'+
+    card.innerHTML=(glOK?'':'<p>Цей пристрій не показує 3D у цьому вікні.</p>')+'<span class="k">Бій дронів над фермою · версія '+VER+'</span><h3>Обери дрон</h3><div class="chars">'+DR.map((p,i)=>'<button data-ch="'+i+'" class="'+(i===myCh?'on':'')+'"><b>'+p.n+'</b><em>'+p.w+'</em><div class="stats">'+bar('Швидкість',p.vmax/26.5)+bar('Маневр',p.rate/432)+bar('Стеля',p.ceil/140)+bar('Заряд',p.hov/240)+bar('Проти вітру',1-(p.cda/p.m)/.085)+bar('Тиша',1-p.loud*.9)+bar('Гвинти',p.pt/1.6)+'</div></button>').join('')+'</div>'+(p=>'<div class="stats selst">'+bar('Швидкість',p.vmax/26.5)+bar('Маневр',p.rate/432)+bar('Стеля',p.ceil/140)+bar('Заряд',p.hov/240)+bar('Проти вітру',1-(p.cda/p.m)/.085)+bar('Тиша',1-p.loud*.9)+bar('Гвинти',p.pt/1.6)+'</div>')(DR[myCh])+'<p>'+DR[myCh].d+' <b style="color:var(--star)">'+DR[myCh].wd+'</b></p>'+
       '<div class="rules">'+Object.keys(RULES).map(k=>'<button data-rule="'+k+'" class="'+(k===myRule?'on':'')+'">'+RULES[k].n+'</button>').join('')+'</div><p class="rd">'+RULES[myRule].d+'</p><div class="btns"><button id="mHost">Кімната для друзів (до 6)</button><button class="sec" id="mBot">Проти комп\'ютера</button><button class="sec" id="mFree">Вільний політ</button></div><p class="rd">У кімнату друзі заходять за одним посиланням. Команду, дрон і режим обираєте вже всередині; можна додати комп\'ютерів і грати до 3 на 3.</p>';
     card.querySelectorAll('button[data-ch]').forEach(b=>b.onclick=()=>{ myCh=+b.dataset.ch; try{localStorage.setItem('pz_dr_ch',myCh);}catch(e){} ui(); });
     card.querySelectorAll('button[data-rule]').forEach(b=>b.onclick=()=>{ myRule=b.dataset.rule; try{localStorage.setItem('pz_dr_rule',myRule);}catch(e){} ui(); });
@@ -514,10 +516,10 @@ cv.addEventListener('pointermove',e=>{ for(const side of ['L','R']){ const s=st[
     const dz=v=>Math.abs(v)<.12?0:(v-Math.sign(v)*.12)/.88; if(side==='L'){ I.mx=dz(dx); I.my=dz(-dy); } else { I.yaw=dz(dx); I.alt=dz(-dy); } } });
 const pUp=e=>{ if(e.pointerType==='mouse') I.fire=false; for(const side of ['L','R']){ const s=st[side]; if(s&&s.id===e.pointerId){ st[side]=null; $('s'+side).hidden=true; if(side==='L'){I.mx=I.my=0;} else {I.yaw=I.alt=0;} } } };
 cv.addEventListener('pointerup',pUp); cv.addEventListener('pointercancel',pUp); cv.addEventListener('contextmenu',e=>e.preventDefault());
-function holdBtn(id,k){ const el=$(id), dn=e=>{e.preventDefault(); audioInit(); I[k]=true; if(k==='fire') I.fireTap=true; try{el.setPointerCapture(e.pointerId);}catch(_){}} , up=()=>{I[k]=false;}; el.addEventListener('pointerdown',dn); el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('lostpointercapture',up); el.addEventListener('contextmenu',e=>e.preventDefault()); }
+function holdBtn(id,k){ const el=$(id), dn=e=>{e.preventDefault(); audioInit(); I[k]=true; if(k==='fire') I.fireTap=true; if(k==='dash') I.dashTap=true; try{el.setPointerCapture(e.pointerId);}catch(_){}} , up=()=>{I[k]=false;}; el.addEventListener('pointerdown',dn); el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('lostpointercapture',up); el.addEventListener('contextmenu',e=>e.preventDefault()); }
 holdBtn('bFire','fire'); holdBtn('bDash','dash');
 const KM={KeyW:'w',KeyS:'s',KeyA:'a',KeyD:'d',ArrowLeft:'left',ArrowRight:'right',ArrowUp:'aup',ArrowDown:'adn',KeyQ:'left',KeyE:'right',Space:'up',ShiftLeft:'down',ShiftRight:'down',KeyF:'fire',KeyC:'dash'};
-window.addEventListener('keydown',e=>{ if(G.mode!=='play')return; const k=KM[e.code]; if(k){ if(k==='fire'&&!key.fire) I.fireTap=true; key[k]=true;e.preventDefault();audioInit();} else if(e.code==='KeyR'&&G.kind==='free'){ spawn(me,FREE); me.batt=1; } else if(e.code==='KeyX'){ e.preventDefault(); scopeToggle(); } });
+window.addEventListener('keydown',e=>{ if(G.mode!=='play')return; const k=KM[e.code]; if(k){ if(k==='fire'&&!key.fire) I.fireTap=true; if(k==='dash'&&!key.dash) I.dashTap=true; key[k]=true;e.preventDefault();audioInit();} else if(e.code==='KeyR'&&G.kind==='free'){ spawn(me,FREE); me.batt=1; } else if(e.code==='KeyX'){ e.preventDefault(); scopeToggle(); } });
 window.addEventListener('keyup',e=>{ const k=KM[e.code]; if(k) key[k]=false; }); window.addEventListener('blur',()=>{ for(const k in key) key[k]=false; I.fire=I.dash=false; });
 $('bHome').onclick=()=>{ spawn(me,FREE); say('На старті, заряд повний',2); };
 $('bMenu').onclick=()=>{ netClose(); G.mode='menu'; G.res=''; ui(); };
