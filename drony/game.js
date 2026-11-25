@@ -304,7 +304,7 @@ document.addEventListener('fullscreenchange',layoutBig); window.addEventListener
 
 /* ---------- цикл ---------- */
 let last=0;
-function frame(ts){ const dt=Math.min(.05,(ts-last)/1000||0); last=ts; if(dt>0) fps+=(1/dt-fps)*.05;
+function frame(ts){ const dt=Math.min(.1,(ts-last)/1000||0); last=ts; if(dt>0) fps+=(1/dt-fps)*.05;
   if(G.mode==='play'&&(!document.hidden||G.kind==='net')){ let r=dt; while(r>1e-5&&G.mode==='play'){ const s=Math.min(r,1/120); step(s); r-=s; } if(G.mode==='play'){ place(); hud(); mapT+=dt; if(mapT>.12){mapT=0; drawMap();} } netFrame(dt); }
   else { G.t+=dt; if(G.mode==='menu'||G.mode==='lobby'){ cam.position.set(Math.sin(G.t*.08)*90,38,Math.cos(G.t*.08)*90+10); cam.lookAt(0,6,-10); } if(G.kind==='net'&&conn) netFrame(dt); }
   if(renderer) renderer.render(scene,cam); audioFrame(); requestAnimationFrame(frame); }
