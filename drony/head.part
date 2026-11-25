@@ -79,7 +79,7 @@ body:not(.touch) .fb{display:none}
 </head>
 <body>
 <div class="wrap">
-  <header><p class="eyebrow">Поле зору · гра · етап 8 — п’ятий дрон «Бабка»</p><h1>Дрони над фермою</h1></header>
+  <header><p class="eyebrow">Поле зору · гра · етап 9 — вогнеметний дрон «Овод»</p><h1>Дрони над фермою</h1></header>
   <div class="stage" id="stage">
     <canvas id="c" aria-label="Тривимірна ферма, вид із-за дрона"></canvas>
     <div class="hud" id="hL"></div><canvas id="map" width="150" height="150"></canvas><div class="hud" id="hT" hidden></div><div class="hud" id="hMsg"></div><div id="hit"></div><div id="aim" hidden></div><div id="tag" hidden></div>
@@ -91,6 +91,6 @@ body:not(.touch) .fb{display:none}
   </div>
   <div class="row2">
     <button id="bBig">⛶ На весь екран</button><button id="bSnd" aria-pressed="true">Звук: увімк.</button><button id="bMenu" hidden>Змінити дрон</button>
-    <span class="hint">На комп'ютері: W A S D — летіти, ← → — поворот, ↑ ↓ — висота, F або клац мишею — вогонь (в Оси гарпун), C — ривок (Оса), X або права кнопка миші — приціл (Бабка), R — на старт. На телефоні: лівий палець веде дрон, правий повертає і міняє висоту; стріляє сам, коли приціл червоний.</span>
+    <span class="hint">На комп'ютері: W A S D — летіти, ← → — поворот, ↑ ↓ — висота, F або клац мишею — вогонь (в Оси гарпун), C — ривок (Оса), R — на старт. На телефоні: лівий палець веде дрон, правий повертає і міняє висоту; стріляє сам, коли приціл червоний.</span>
   </div>
 </div>
