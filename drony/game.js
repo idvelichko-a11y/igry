@@ -8,7 +8,7 @@ const Q=new URLSearchParams(location.search), isLoc=/^(localhost|127\.0\.0\.1)$/
 const DR=[
  {n:'Шершень',w:'дріб',wd:'Дріб віялом: що ближче, то болючіше.',m:1.6,twr:2.6,tilt:35,rate:220,yaw:150,cda:.0715,vUp:6,vDn:5,ceil:60,hov:200,loud:.85,hz:150,pt:1,col:0xD2A63C,rng:30,cdn:.75,d:'Середній у всьому. Слухняний, добре тримає вітер.'},
  {n:'Павук',w:'сітка',wd:'Сітка обплутує: ворог падає, не стріляє і перегріває мотори.',m:.9,twr:2.4,tilt:40,rate:200,yaw:140,cda:.07,vUp:5,vDn:4.5,ceil:90,hov:240,loud:.35,hz:170,pt:.6,col:0x7FB069,rng:26,cdn:3.6,d:'Легкий і тихий, довго тримає заряд. Вітер зносить найсильніше, гвинти найніжніші.'},
- {n:'Оса',w:'таран',wd:'Спис: бий з розгону носом уперед. Ривок сам доводить на ціль, і в ривку в Осу не прицілитись.',m:1,twr:3.9,tilt:48,rate:432,yaw:264,cda:.026,vUp:9.6,vDn:8.4,ceil:35,hov:130,loud:.6,hz:195,pt:.8,col:0xC9503A,rng:16,cdn:1.2,d:'Найшвидша і найверткіша. Низька стеля, заряд тане на очах.'},
+ {n:'Оса',w:'таран',wd:'Гарпун чіпляє ворога до 25 м і підтягує тебе до нього. Ривок сам доводить на ціль із 35 м. Шкода — від удару списом.',m:1,twr:3.9,tilt:48,rate:432,yaw:264,cda:.026,vUp:9.6,vDn:8.4,ceil:35,hov:130,loud:.6,hz:195,pt:.8,col:0xC9503A,rng:25,cdn:1.2,d:'Найшвидша і найверткіша. Низька стеля, заряд тане на очах.'},
  {n:'Джміль',w:'гармата',wd:'Рідкий потужний постріл із вибухом. Ближче 6 м снаряд не встигає звестися.',m:3.2,twr:1.9,tilt:18,rate:110,yaw:90,cda:.1,vUp:3.5,vDn:4,ceil:120,hov:170,loud:1,hz:95,pt:1.6,col:0x3F5F8A,rng:50,cdn:3,d:'Важкий і міцний: шкода по ньому на чверть менша. Розганяється довго, зате вітер йому байдужий і стеля найвища.'},
  {n:'Бабка',w:'снайпер',wd:'Оптичний приціл із наближенням ×4 і ×8: наводиш сам і тиснеш «Вогонь» — промінь долітає миттю. Перезаряд довгий. Червоний промінь прицілу бачать усі.',m:.8,twr:2.5,tilt:32,rate:180,yaw:130,cda:.06,vUp:5.5,vDn:5,ceil:140,hov:220,loud:.45,hz:210,pt:.5,col:0x8E6BBF,rng:110,cdn:5,d:'Тендітна: шкода по ній на третину більша, гвинти найніжніші. Зате б\'є найдалі й літає найвище.'},
 ];
@@ -43,7 +43,7 @@ function mkMesh(ch,col){ const p=DR[ch], g=new THREE.Group(), mat=new THREE.Mesh
 /* ---------- стан ---------- */
 const SPT=[[-70,.42,62,-.9],[76,.42,-70,2.3]], SPF=[[-70,.42,62,-.9],[76,.42,-70,2.3],[-90,.42,-74,-2.3],[86,.42,58,.8],[30,.42,-76,3.1],[15,.42,72,0]], FREE=[0,.42,20,0];
 const TEAMC=[0x3F8FD2,0xE8853A], FFAC=[0x3F8FD2,0xE8853A,0x6FBF4A,0xA070D0,0xE4C63A,0xD86FA8], TEAMN=['Сині','Помаранчеві'], hex=c=>'#'+c.toString(16).padStart(6,'0');
-function mkD(ch){ return {ch:ch,id:0,team:0,side:0,local:true,bot:false,col:0,det:0,ls:null,rp:null,lastBy:-1,p:new THREE.Vector3(),v:new THREE.Vector3(),yaw:0,pitch:0,roll:0,batt:1,T:0,ground:true,spin:0,hp:100,cd:0,dcd:0,dash:0,tang:0,imm:0,lockT:0,dry:0,prop:100,snag:0,boost:0,shield:0,rT:0,aimT:0,aimId:null,laser:null,zoom:0,el:0,le:0,ld:null,tgt:null,dead:false,lock:false,indoor:false,corn:false,mesh:null,
+function mkD(ch){ return {ch:ch,id:0,team:0,side:0,local:true,bot:false,col:0,det:0,ls:null,rp:null,lastBy:-1,p:new THREE.Vector3(),v:new THREE.Vector3(),yaw:0,pitch:0,roll:0,batt:1,T:0,ground:true,spin:0,hp:100,cd:0,dcd:0,dash:0,tang:0,imm:0,lockT:0,dry:0,prop:100,snag:0,boost:0,shield:0,rT:0,aimT:0,aimId:null,laser:null,zoom:0,el:0,le:0,ld:null,hook:null,hcd:0,hookId:null,tgt:null,dead:false,lock:false,indoor:false,corn:false,mesh:null,
   inp:{mx:0,my:0,yaw:0,alt:0,fire:false,dash:false}}; }
 let me=mkD(0), foe=null, D=[];
 const G={mode:'menu',kind:'free',myId:0,host:true,fmt:'teams',t:0,wa:.6,ws:3,wx:0,wz:0,hitT:0,hits:0,got:0,left:[],msg:'',msgT:0,chg:false,camYaw:0,sc:[0,0,0,0,0,0,0,0],res:'',phase:'fight',phT:0,rain:0,rainIn:45,rainW:false,rule:'duel',win:false,fog:null,ctOff:0,detT:0,scanT:0,baseHit:0,rtt:0,netMsg:'',auto:coarse,botSkill:.6};
@@ -53,13 +53,13 @@ function auth(){ return G.kind!=='net'||G.host; }
 function isEnemy(d){ return d!==me&&d.side!==me.side; }
 function label(d){ return d===me?'Ти':d.bot?(G.kind==='bot'?'Комп\'ютер':'К'+(d.id-5)):'Г'+(d.id+1); }
 function spawnOf(d){ if(G.kind==='free') return FREE; if(G.fmt==='teams'){ const s=SPT[d.team], k=D.filter(q=>q.team===d.team).indexOf(d), sg=d.team?-1:1; return [s[0]+k*4*sg,s[1],s[2]-k*3*sg,s[3]]; } return SPF[Math.max(0,D.indexOf(d))%6]; }
-function spawn(d,sp){ d.p.set(sp[0],sp[1],sp[2]); d.v.set(0,0,0); d.yaw=sp[3]; d.pitch=d.roll=0; d.ground=true; d.hp=100; d.batt=1; d.cd=d.dcd=d.dash=d.tang=d.imm=d.lockT=d.snag=d.boost=d.shield=d.aimT=0; d.aimId=null; d.zoom=0; d.el=0; if(d===me) scopeApply(); d.prop=100; d.dead=false; d.lastBy=-1; if(d.mesh) d.mesh.visible=true; }
+function spawn(d,sp){ d.p.set(sp[0],sp[1],sp[2]); d.v.set(0,0,0); d.yaw=sp[3]; d.pitch=d.roll=0; d.ground=true; d.hp=100; d.batt=1; d.cd=d.dcd=d.dash=d.tang=d.imm=d.lockT=d.snag=d.boost=d.shield=d.aimT=0; d.aimId=null; d.zoom=0; d.el=0; d.hook=null; d.hcd=0; d.hookId=null; if(d===me) scopeApply(); d.prop=100; d.dead=false; d.lastBy=-1; if(d.mesh) d.mesh.visible=true; }
 function clearFx(){ for(const s of shots) scene.remove(s.m); shots.length=0; for(const f of fx) scene.remove(f.m); fx.length=0; }
 /* cfg: {kind:'free'|'bot'|'net', rule, fmt:'teams'|'ffa', myId, bi:[i0,i1], players:[{id,ch,team,bot}]} */
 function start(cfg){ G.kind=cfg.kind; G.myId=cfg.myId|0; G.host=G.kind!=='net'||G.myId===0; G.fmt=cfg.fmt==='ffa'?'ffa':'teams'; G.rule=(G.kind!=='free'&&RULES[cfg.rule])?cfg.rule:'duel'; if(G.rule==='base'&&G.fmt!=='teams') G.rule='duel';
   clearFx(); clearBases(); pkClear(); flagM.visible=false; FL.i=-1; FL.n=0; FL.req=-1; G.win=false; G.baseHit=0; G.fog=null; G.ctOff=0; G.res=''; for(const b of BIRDS) b.hid=0;
   for(const d of D){ if(d.mesh) scene.remove(d.mesh); if(d.laser) scene.remove(d.laser); } if(me.mesh) scene.remove(me.mesh); D=[];
-  for(const pl of cfg.players){ const d=mkD(clamp(pl.ch|0,0,4)); d.id=pl.id|0; d.team=pl.team?1:0; d.side=G.fmt==='teams'?d.team:d.id; d.bot=!!pl.bot; d.local=d.id===G.myId||(d.bot&&G.host); if(d.bot) d.bs={t:Math.random()*.25,ty:20,err:0,sd:D.length%2?1:-1,st:0,los:true,wall:false,stuck:0,esc:0}; d.col=G.kind==='free'?null:G.fmt==='teams'?TEAMC[d.team]:FFAC[d.id%6]; d.mesh=mkMesh(d.ch,d.col); if(d.col==null) d.col=DR[d.ch].col; scene.add(d.mesh); if(d.ch===4){ const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3)); d.laser=new THREE.Line(lg,new THREE.LineBasicMaterial({color:0xFF2020,transparent:true,opacity:.8})); d.laser.frustumCulled=false; d.laser.visible=false; scene.add(d.laser); } D.push(d); }
+  for(const pl of cfg.players){ const d=mkD(clamp(pl.ch|0,0,4)); d.id=pl.id|0; d.team=pl.team?1:0; d.side=G.fmt==='teams'?d.team:d.id; d.bot=!!pl.bot; d.local=d.id===G.myId||(d.bot&&G.host); if(d.bot) d.bs={t:Math.random()*.25,ty:20,err:0,sd:D.length%2?1:-1,st:0,los:true,wall:false,stuck:0,esc:0}; d.col=G.kind==='free'?null:G.fmt==='teams'?TEAMC[d.team]:FFAC[d.id%6]; d.mesh=mkMesh(d.ch,d.col); if(d.col==null) d.col=DR[d.ch].col; scene.add(d.mesh); if(d.ch===4||d.ch===2){ const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3)); d.laser=new THREE.Line(lg,new THREE.LineBasicMaterial({color:d.ch===2?0x1E2326:0xFF2020,transparent:true,opacity:.8})); d.laser.frustumCulled=false; d.laser.visible=false; scene.add(d.laser); } D.push(d); }
   me=D.find(d=>d.id===G.myId)||D[0]; foe=D.find(isEnemy)||null; for(const d of D) d.tgt=d===me?foe:me;
   if(G.rule==='base'){ const bi=Array.isArray(cfg.bi)?cfg.bi:[0,0]; for(let t=0;t<2;t++){ const l=BSP[t], a=l[clamp(bi[t]|0,0,l.length-1)]; BASE[t]=mkBase(t,a[0],a[1],a[2]); } BASE[me.team].found=true; }
   G.t=0; G.hits=0; G.got=0; G.rain=0; G.rainIn=35+Math.random()*25; G.rainW=false; G.sc=[0,0,0,0,0,0,0,0]; G.left=G.kind==='free'?W.marks.map((_,i)=>i):[]; markM.forEach(m=>m.visible=G.kind==='free');
@@ -91,19 +91,21 @@ function hazards(d,dt){ if(d.snag>0) d.snag-=dt; const pt=DR[d.ch].pt, x=d.p.x, 
 function stepD(d,dt){ const p=DR[d.ch], inp=d.inp; let mx=inp.mx, my=inp.my, yw=inp.yaw, al=inp.alt;
   const zn=W.zoneAt(d.p.x,d.p.y,d.p.z); d.indoor=!!zn; const wetK=(G.rain>0&&!zn)?1:0, wetM=wetK*Math.sqrt(1.6/p.m), propK=.5+.5*d.prop/100;
   if(d.dead){ mx=my=yw=al=0; } else if(d.tang>0){ d.tang-=dt; if(d.tang<=0) d.imm=2.5; if(G.kind!=='free'&&(d.local)) d.hp-=6*(d.ch===3?.75:1)*dt; mx=clamp(mx*.3+Math.sin(G.t*9+d.ch)*.8,-1,1); my=clamp(my*.3+Math.cos(G.t*7)*.8,-1,1); yw+=Math.sin(G.t*5)*.9; }
-  if(d.boost>0) d.boost-=dt; if(d.shield>0) d.shield-=dt; if(d.imm>0) d.imm-=dt; if(d.dcd>0) d.dcd-=dt; if(d.dash>0) d.dash-=dt; if(inp.dash&&d.ch===2&&d.dcd<=0&&!d.dead&&d.batt>.05){ d.dash=.9; d.dcd=d.boost>0?1.2:3; d.batt=Math.max(0,d.batt-.04); if(d===me) beep(520,0,.25,'sawtooth',.12); }
+  d.pull=false; if(d.boost>0) d.boost-=dt; if(d.shield>0) d.shield-=dt; if(d.imm>0) d.imm-=dt; if(d.dcd>0) d.dcd-=dt; if(d.dash>0) d.dash-=dt; if(d.hcd>0) d.hcd-=dt; if(inp.dash&&d.ch===2&&d.dcd<=0&&!d.dead&&d.batt>.05){ d.dash=2; d.dcd=d.boost>0?2:5; d.batt=Math.max(0,d.batt-.05); if(d===me) beep(520,0,.25,'sawtooth',.12); }
   d.yaw-=yw*p.yaw*RAD*(1-.15*wetK)*(d.zoom?(d.zoom===2?.09:.18):1)*dt;
   if(d.dash>0&&d.tgt&&!d.tgt.dead&&!d.dead){ const tx=d.tgt.p.x-d.p.x, ty=d.tgt.p.y-d.p.y, tz=d.tgt.p.z-d.p.z, tl=Math.hypot(tx,ty,tz); let da=Math.atan2(-tx,-tz)-d.yaw; da=Math.atan2(Math.sin(da),Math.cos(da));
-    if(tl<20&&tl>.3&&Math.abs(da)<.9){ d.yaw+=clamp(da,-2.2*dt,2.2*dt); d.v.x+=tx/tl*20*dt; d.v.y+=ty/tl*20*dt; d.v.z+=tz/tl*20*dt; } }
+    if(tl<35&&tl>.3&&Math.abs(da)<1){ d.pull=true; d.yaw+=clamp(da,-2.8*dt,2.8*dt); const ux=tx/tl, uy=ty/tl, uz=tz/tl, va=d.v.x*ux+d.v.y*uy+d.v.z*uz, kd=Math.min(1,3*dt); d.v.x-=(d.v.x-ux*va)*kd; d.v.y-=(d.v.y-uy*va)*kd; d.v.z-=(d.v.z-uz*va)*kd; d.v.x+=ux*27*dt; d.v.y+=uy*27*dt; d.v.z+=uz*27*dt; } }
+  if(d.hook){ const h=d.hook, t=h.tg, tx=t.p.x-d.p.x, ty=t.p.y-d.p.y, tz=t.p.z-d.p.z, tl=Math.hypot(tx,ty,tz); h.t-=dt; h.c=(h.c||0)+dt; let cut=h.t<=0||t.dead||d.dead||tl>36||tl<.4; if(!cut&&h.c>.12){ h.c=0; cut=blocked(d.p,t.p); }
+    if(cut){ d.hook=null; if(d===me&&!d.dead&&h.t>0&&tl>3) say('Трос обірвався',1.5); } else { d.pull=true; const ux=tx/tl, uy=ty/tl, uz=tz/tl, va=d.v.x*ux+d.v.y*uy+d.v.z*uz, kd=Math.min(1,5*dt); d.v.x-=(d.v.x-ux*va)*kd; d.v.y-=(d.v.y-uy*va)*kd; d.v.z-=(d.v.z-uz*va)*kd; d.v.x+=ux*40*dt; d.v.y+=uy*40*dt; d.v.z+=uz*40*dt; let da=Math.atan2(-tx,-tz)-d.yaw; da=Math.atan2(Math.sin(da),Math.cos(da)); d.yaw+=clamp(da,-5*dt,5*dt); } }
   const boost=d.dash>0?1.3:1, mt=p.tilt*RAD*boost*(1-.18*wetM), rr=p.rate*RAD*dt, sy=Math.sin(d.yaw), cy=Math.cos(d.yaw); let tp=my*mt, tr=mx*mt;
-  if(Math.abs(mx)+Math.abs(my)<.05&&!d.ground&&!d.dead){ const vf=-d.v.x*sy-d.v.z*cy, vr=d.v.x*cy-d.v.z*sy; tp=clamp(-vf*.13,-mt*.85,mt*.85); tr=clamp(-vr*.13,-mt*.85,mt*.85); }
+  if(Math.abs(mx)+Math.abs(my)<.05&&!d.ground&&!d.dead&&!d.hook&&d.dash<=0){ const vf=-d.v.x*sy-d.v.z*cy, vr=d.v.x*cy-d.v.z*sy; tp=clamp(-vf*.13,-mt*.85,mt*.85); tr=clamp(-vr*.13,-mt*.85,mt*.85); }
   if(d.prop<60&&!d.ground){ const wv=(60-d.prop)/60*.15; tp+=Math.sin(G.t*13+d.ch)*wv; tr+=Math.cos(G.t*11+d.ch)*wv; }
   if(d.dead){ d.pitch+=2.5*dt; d.roll+=3.3*dt; } else { d.pitch+=clamp(tp-d.pitch,-rr,rr); d.roll+=clamp(tr-d.roll,-rr,rr); }
   const sp=Math.sin(d.pitch), sr=Math.sin(d.roll); let ux=-sy*sp+cy*sr, uz=-cy*sp-sy*sr, uy=Math.cos(d.pitch)*Math.cos(d.roll); const ul=Math.hypot(ux,uy,uz)||1; ux/=ul; uy/=ul; uz/=ul;
   const sag=d.batt<=0?0:(d.batt<.15?.75+d.batt/.15*.25:1), ceilK=1-(1-1/p.twr)*Math.pow(clamp(d.p.y/p.ceil,0,1.25),2);
   let Tmax=d.batt<=0?p.m*GR*.88:p.m*GR*p.twr*ceilK*sag*propK*(1-.1*wetM)*(d.dash>0?1.35:1); if(d.tang>0) Tmax=Math.min(Tmax,p.m*GR*.5);
   const idle=d.ground&&al<=.05&&Math.abs(mx)+Math.abs(my)<.05;
-  let T; if(d.dead) T=0; else if(idle) T=p.m*GR*.1; else { const vyC=al>0?al*p.vUp*(1-.3*wetM):al*p.vDn, ay=clamp((vyC-d.v.y)*4,-9,14); T=clamp(p.m*(GR+ay)/Math.max(.35,uy),p.m*GR*.1,Tmax); }
+  let T; if(d.dead) T=0; else if(idle) T=p.m*GR*.1; else { const vyC=d.pull?d.v.y:al>0?al*p.vUp*(1-.3*wetM):al*p.vDn, ay=clamp((vyC-d.v.y)*4,-9,14); T=clamp(p.m*(GR+ay)/Math.max(.35,uy),p.m*GR*.1,Tmax); }
   d.T=T; const ge=d.p.y<1.3?1+.16*(1-d.p.y/1.3):1, a=T*ge/p.m;
   const wk=zn?0:clamp(d.p.y/6,.25,1), wx=G.wx*wk, wz=G.wz*wk;
   const rx=d.v.x-wx, ry=d.v.y, rz=d.v.z-wz, rs=Math.hypot(rx,ry,rz), k=.5*RHO*p.cda/p.m*(1+wetK*.25);
@@ -120,24 +122,37 @@ function stepD(d,dt){ const p=DR[d.ch], inp=d.inp; let mx=inp.mx, my=inp.my, yw=
 
 /* ---------- зброя ---------- */
 const tA=new THREE.Vector3(), tB=new THREE.Vector3();
-function blocked(a,b){ const n=Math.ceil(a.distanceTo(b)/.6); for(let i=1;i<n;i++){ const f=i/n; if(W.inside(a.x+(b.x-a.x)*f,a.y+(b.y-a.y)*f,a.z+(b.z-a.z)*f,0)) return true; } return false; }
-function aimOf(d,tg,out){ const p=DR[d.ch], fx0=-Math.sin(d.yaw), fz0=-Math.cos(d.yaw); out.set(fx0,-Math.sin(d.pitch)*.25,fz0).normalize(); d.lock=false; if(!tg||tg.dead||d.dead||tg.dash>0||(d.ch===4&&d.p.distanceTo(tg.p)<16)||(tg.corn&&d.p.distanceTo(tg.p)>12)||((murk(d.p)||murk(tg.p))&&d.p.distanceTo(tg.p)>18)) return out;
-  let lead=0; const dist=d.p.distanceTo(tg.p); if(d.ch===1) lead=dist/30; else if(d.ch===3) lead=dist/48;
+const BX=W.cols.map(c=>c.r?[c.x-c.r*.8,c.y0,c.z-c.r*.8,c.x+c.r*.8,c.y1,c.z+c.r*.8]:c);
+/* найближчий вхід променя в перешкоду: повертає t у (0, maxT) або maxT */
+function rayBox(ox,oy,oz,dx,dy,dz,maxT){ let best=maxT; const ex=ox+dx*maxT, ey=oy+dy*maxT, ez=oz+dz*maxT, ax=ox<ex?ox:ex, bx=ox<ex?ex:ox, ay=oy<ey?oy:ey, by=oy<ey?ey:oy, az=oz<ez?oz:ez, bz=oz<ez?ez:oz;
+  for(let i=0;i<BX.length;i++){ const c=BX[i]; if(c[3]<ax||c[0]>bx||c[4]<ay||c[1]>by||c[5]<az||c[2]>bz) continue; let t0=-1e9, t1=1e9, a, b;
+    if(dx!==0){ a=(c[0]-ox)/dx; b=(c[3]-ox)/dx; if(a>b){ const q=a; a=b; b=q; } if(a>t0) t0=a; if(b<t1) t1=b; } else if(ox<c[0]||ox>c[3]) continue;
+    if(dy!==0){ a=(c[1]-oy)/dy; b=(c[4]-oy)/dy; if(a>b){ const q=a; a=b; b=q; } if(a>t0) t0=a; if(b<t1) t1=b; } else if(oy<c[1]||oy>c[4]) continue;
+    if(dz!==0){ a=(c[2]-oz)/dz; b=(c[5]-oz)/dz; if(a>b){ const q=a; a=b; b=q; } if(a>t0) t0=a; if(b<t1) t1=b; } else if(oz<c[2]||oz>c[5]) continue;
+    if(t0<=t1&&t0>1e-3&&t0<best) best=t0; } return best; }
+function blocked(a,b){ return rayBox(a.x,a.y,a.z,b.x-a.x,b.y-a.y,b.z-a.z,.999)<.999; }
+function aimOf(d,tg,out){ const p=DR[d.ch], fx0=-Math.sin(d.yaw), fz0=-Math.cos(d.yaw); out.set(fx0,-Math.sin(d.pitch)*.25,fz0).normalize(); d.lock=false; if(!tg||tg.dead||d.dead||tg.dash>1.1||(d.ch===4&&d.p.distanceTo(tg.p)<16)||(tg.corn&&d.p.distanceTo(tg.p)>12)||((murk(d.p)||murk(tg.p))&&d.p.distanceTo(tg.p)>18)) return out;
+  let lead=0; const dist=d.p.distanceTo(tg.p); if(d.ch===1) lead=dist/30; else if(d.ch===3) lead=dist/48; else if(d.ch===2) lead=dist/45;
   tA.copy(tg.p).addScaledVector(tg.v,lead*.9).sub(d.p); const hd=Math.hypot(tA.x,tA.z)||1e-6, dot=(tA.x*fx0+tA.z*fz0)/hd, el=Math.atan2(tA.y,hd);
-  if(dist<p.rng*(G.rain>0?.75:1)&&dot>Math.cos((d.ch===2?40:d.ch===4?9:17)*RAD)&&Math.abs(el)<55*RAD&&!blocked(d.p,tg.p)){ d.lock=true; if(d.ch===1||d.ch===3) tA.y+=.5*(d.ch===1?3:6)*lead*lead; out.copy(tA).normalize(); } return out; }
+  if(dist<p.rng*(G.rain>0?.75:1)&&dot>Math.cos((d.ch===2?25:d.ch===4?9:17)*RAD)&&Math.abs(el)<55*RAD&&!blocked(d.p,tg.p)){ d.lock=true; if(d.ch===1||d.ch===3) tA.y+=.5*(d.ch===1?3:6)*lead*lead; out.copy(tA).normalize(); } return out; }
 function line(a,b,colr,life){ const g=new THREE.BufferGeometry().setFromPoints([a.clone(),b.clone()]), m=new THREE.Line(g,new THREE.LineBasicMaterial({color:colr,transparent:true})); scene.add(m); fx.push({m:m,t:life,T:life}); }
 function boom(p,r,colr){ const m=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),new THREE.MeshBasicMaterial({color:colr,transparent:true,opacity:.8})); m.position.copy(p); m.scale.setScalar(.3); scene.add(m); fx.push({m:m,t:.45,T:.45,grow:r}); }
-function applyHit(d,dm,k,by){ d.hp-=dm*(d.shield>0?.4:1); d.lastBy=by; if(k==='net') netHit(d); if(k==='shot') d.prop=Math.max(0,d.prop-dm*.35/DR[d.ch].pt); if(d===me){ G.hitT=.35; beep(140,0,.18,'square',.14); if(k==='net') say('Тебе обплутало сіткою!',2); if(k==='ram') say('Тебе протаранили!',1.5); if(k==='snipe') say('Тебе підстрелила Бабка!',2); } }
+function applyHit(d,dm,k,by){ d.hp-=dm*(d.shield>0?.4:1); d.lastBy=by; if(k==='net') netHit(d); if(k==='shot') d.prop=Math.max(0,d.prop-dm*.35/DR[d.ch].pt); if(d===me){ G.hitT=.35; beep(140,0,.18,'square',.14); if(k==='net') say('Тебе обплутало сіткою!',2); if(k==='ram') say('Тебе протаранили!',1.5); if(k==='snipe') say('Тебе підстрелила Бабка!',2); if(k==='hook') say('Тебе зачепили гарпуном!',2); } }
 function hurt(tg,dmg,kind,by){ by=by||me; if(!tg||tg.dead) return;
   if(tg.isBase){ dmg=kind==='net'?18:kind==='snipe'?dmg*.5:kind==='shot'?dmg*.5:kind==='ram'?dmg*1.4:dmg*1.2; const en=tg.team!==me.team; if(en) tg.found=true; if(G.kind==='net'&&!G.host) send({t:'bh',b:tg.team,d:Math.round(dmg)},0); else baseDmg(tg,dmg); if(en&&by===me) beep(880,0,.07,'square',.09); boom(tg.p,1.2,0xFFD34D); return; }
   if(tg.ch===3) dmg*=.75; else if(tg.ch===4) dmg*=1.3; if(tg.local) applyHit(tg,dmg,kind,by.id); else send({t:'hit',v:tg.id,d:Math.round(dmg),k:kind,by:by.id},tg.bot?0:tg.id);
   if(tg!==me){ if(by===me) beep(880,0,.07,'square',.09); boom(tg.p,.9,0xFFD34D); } }
-function fire(d,tg,ghost,dirIn){ const p=DR[d.ch]; if(d.dead||d.cd>0||d.ch===2||d.tang>0) return false; const B=d.boost>0; d.cd=p.cdn*(B?[.66,.6,1,.57,.6][d.ch]:1); const dir=dirIn||aimOf(d,tg,new THREE.Vector3()).clone(), o=d.p.clone().addScaledVector(dir,.5);
+function fire(d,tg,ghost,dirIn){ const p=DR[d.ch];
+  if(d.ch===2){ if(d.dead||d.hcd>0||d.tang>0||d.hook) return false; d.hcd=8*(d.boost>0?.5:1); const dir=dirIn||aimOf(d,tg,new THREE.Vector3()).clone(), o=d.p.clone().addScaledVector(dir,.6);
+    if(d.local&&G.kind==='net'&&!ghost) send({t:'f',id:d.id,o:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],d:[+dir.x.toFixed(3),+dir.y.toFixed(3),+dir.z.toFixed(3)]});
+    const m=new THREE.Mesh(new THREE.ConeGeometry(.09,.5,6),new THREE.MeshBasicMaterial({color:0xE8E0D0})); m.position.copy(o); m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir); scene.add(m);
+    shots.push({m:m,p:o,v:dir.clone().multiplyScalar(45).addScaledVector(d.v,.2),g:0,net:false,hook:true,own:d,tg:tg,ghost:ghost,o:o.clone(),life:.62}); beep(600,0,.08,'square',d===me?.14:.07); beep(240,.03,.2,'triangle',d===me?.14:.07); return true; }
+  if(d.dead||d.cd>0||d.tang>0) return false; const B=d.boost>0; d.cd=p.cdn*(B?[.66,.6,1,.57,.6][d.ch]:1); const dir=dirIn||aimOf(d,tg,new THREE.Vector3()).clone(), o=d.p.clone().addScaledVector(dir,.5);
   if(d.local&&G.kind==='net'&&!ghost) send({t:'f',id:d.id,o:[+o.x.toFixed(2),+o.y.toFixed(2),+o.z.toFixed(2)],d:[+dir.x.toFixed(3),+dir.y.toFixed(3),+dir.z.toFixed(3)]});
   if(d.ch===4){ const real=!ghost&&tg&&!tg.dead&&d.lock; let end=ghost&&d._e?d._e:real?d.p.distanceTo(tg.p):sray(o,dir,170); d._e=0; streak(o,dir,end,d===me); d.v.addScaledVector(dir,-1.5); d.aimT=0; if(real) hurt(tg,60*(B?1.25:1),'snipe',d); return true; }
   if(d.ch===0){ beep(210,0,.12,'sawtooth',d===me?.2:.1); beep(90,0,.16,'square',d===me?.14:.07);
     let sum=0; for(let i=0;i<(B?13:8);i++){ const sd=dir.clone(); sd.x+=(Math.random()-.5)*.14; sd.y+=(Math.random()-.5)*.1; sd.z+=(Math.random()-.5)*.14; sd.normalize(); let end=p.rng;
-      for(let s=1;s<p.rng;s+=1){ if(W.inside(o.x+sd.x*s,o.y+sd.y*s,o.z+sd.z*s,0)||o.y+sd.y*s<W.floorAt(o.x+sd.x*s,o.z+sd.z*s)){ end=s; break; } }
+      end=sray(o,sd,p.rng);
       if(!ghost&&tg&&!tg.dead){ tA.copy(tg.p).sub(o); const along=tA.dot(sd); if(along>0&&along<end){ tB.copy(o).addScaledVector(sd,along); if(tB.distanceTo(tg.p)<(tg.r||.7)){ end=along; sum+=3.2*(1-along/p.rng*.65); } } }
       line(o,o.clone().addScaledVector(sd,end),0xFFE9A0,.09); } if(sum>0) hurt(tg,sum,'shot',d); }
   else { const net=d.ch===1, m=new THREE.Mesh(net?new THREE.IcosahedronGeometry(1.3,1):new THREE.SphereGeometry(.22,8,6),new THREE.MeshBasicMaterial({color:net?(B?0xFFD34D:0xffffff):(B?0xC9503A:0x22292C),wireframe:net})); m.position.copy(o); if(B) m.scale.setScalar(1.6); scene.add(m);
@@ -145,6 +160,9 @@ function fire(d,tg,ghost,dirIn){ const p=DR[d.ch]; if(d.dead||d.cd>0||d.ch===2||
     if(net) beep(320,0,.22,'triangle',d===me?.14:.07); else { beep(70,0,.35,'sawtooth',d===me?.3:.16); beep(45,.02,.4,'square',d===me?.2:.1); d.v.addScaledVector(dir,-2.6); } }
   return true; }
 function stepShots(dt){ for(let i=shots.length-1;i>=0;i--){ const s=shots[i]; s.life-=dt; s.v.y-=s.g*dt; s.p.addScaledVector(s.v,dt); s.m.position.copy(s.p); if(s.net) s.m.rotation.y+=6*dt;
+    if(s.hook){ const tg=s.tg, ow=s.own; line(ow.p,s.p,0x22292C,.05); let end=s.life<=0||W.inside(s.p.x,s.p.y,s.p.z,0)||s.p.y<W.floorAt(s.p.x,s.p.z)+.1;
+      if(!end&&tg&&!tg.dead&&s.p.distanceTo(tg.p)<1.15+(tg.r?tg.r-.4:0)){ end=true; if(!s.ghost&&!ow.dead){ hurt(tg,3,'hook',ow); ow.hook={tg:tg,t:2.4,c:0}; if(ow===me){ say('Зачепив! Тягне до цілі',1.6); beep(900,0,.07,'square',.14); } } }
+      if(end){ scene.remove(s.m); shots.splice(i,1); } continue; }
     let done=s.life<=0, hitW=false; const tg=s.tg;
     if(!done&&tg&&!tg.dead&&s.p.distanceTo(tg.p)<(s.net?(s.big?2.8:1.75):.95)+(tg.r?tg.r-.4:0)){ done=true; const dud=!s.net&&s.p.distanceTo(s.o)<6; if(!s.ghost) hurt(tg,s.net?(s.big?30:22):dud?22:(s.big?44:36),s.net?'net':'shell',s.own); if(!s.net) boom(s.p,dud?1:3,0xFF8A3D); }
     if(!done&&(W.inside(s.p.x,s.p.y,s.p.z,0)||s.p.y<W.floorAt(s.p.x,s.p.z)+.1)){ done=true; hitW=true; }
@@ -154,7 +172,7 @@ function stepShots(dt){ for(let i=shots.length-1;i>=0;i--){ const s=shots[i]; s.
     f.t-=dt; f.m.material.opacity=Math.max(0,f.t/f.T); if(f.grow) f.m.scale.setScalar(.3+f.grow*(1-f.t/f.T)); if(f.t<=0){ scene.remove(f.m); fx.splice(i,1); } } }
 /* снайпер: напрям прицілу, промінь до перешкоди, влучання, швидкий слід пострілу */
 function aimDir(d,out){ const ce=Math.cos(d.el); return out.set(-Math.sin(d.yaw)*ce,Math.sin(d.el),-Math.cos(d.yaw)*ce); }
-function sray(o,dir,max){ for(let q=1.5;q<max;q+=1.5){ const x=o.x+dir.x*q, y=o.y+dir.y*q, z=o.z+dir.z*q; if(W.inside(x,y,z,0)||y<W.floorAt(x,z)) return q; } return max; }
+function sray(o,dir,max){ let t=rayBox(o.x,o.y,o.z,dir.x,dir.y,dir.z,max); if(dir.y<0){ let tg=-o.y/dir.y; if(tg>0&&tg<t){ if(W.floorAt(o.x+dir.x*tg,o.z+dir.z*tg)<0) tg=(-3.2-o.y)/dir.y; if(tg<t) t=tg; } } return t; }
 function srayHit(d,o,dir,end){ let best=null, bd=end; const test=(t,r)=>{ tA.copy(t.p).sub(o); const al=tA.dot(dir); if(al<1||al>bd) return; const off=Math.sqrt(Math.max(0,tA.lengthSq()-al*al)); if(off<r+al*.004){ bd=al; best=t; } };
   for(const e of D) if(e.side!==d.side&&!e.dead) test(e,.7); if(G.rule==='base'){ const b=BASE[1-d.team]; if(b&&!b.dead) test(b,1.4); } return best?{t:best,d:bd}:null; }
 function streak(o,dir,len,mine){ const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3)); const m=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xFFF2E0})); m.frustumCulled=false; scene.add(m); fx.push({m:m,t:1,T:1,sn:{o:o.clone(),dir:dir.clone(),len:len,s:0}});
@@ -167,17 +185,17 @@ function scopeToggle(){ if(G.mode!=='play'||me.ch!==4||me.dead||me.tang>0) retur
 function scopeOff(){ if(me.zoom){ me.zoom=0; } scopeApply(); }
 function ramOf(a,b){ tA.copy(b.p).sub(a.p); const br=b.r||0, dist=tA.length(); if(dist>2.3+br||dist<1e-4) return 0; tA.multiplyScalar(1/dist); const fxx=-Math.sin(a.yaw), fzz=-Math.cos(a.yaw);
   const vr=(a.v.x-b.v.x)*tA.x+(a.v.y-b.v.y)*tA.y+(a.v.z-b.v.z)*tA.z, fdot=fxx*tA.x+fzz*tA.z, tip=Math.hypot(a.p.x+fxx*.85-b.p.x,a.p.y-b.p.y,a.p.z+fzz*.85-b.p.z);
-  return (a.ch===2&&a.cd<=0&&a.tang<=0&&vr>4&&fdot>.3&&(tip<1.05+br||dist<1.15+br))?Math.min(a.boost>0?95:70,vr*6*(a.boost>0?1.4:1)*Math.sqrt(1.6/(b.isBase?3.2:DR[b.ch].m))):0; }
+  const hx=b.p.x-a.p.x, hz=b.p.z-a.p.z, hd=Math.hypot(hx,hz), front=hd<.8||(fxx*hx+fzz*hz)/hd>.1, hit=a.ch===2&&a.cd<=0&&a.tang<=0&&vr>4&&front&&(tip<1.35+br||dist<1.5+br); if(hit) a.hook=null; return hit?Math.min(a.boost>0?52:38,vr*5*(a.boost>0?1.4:1)*Math.sqrt(1.6/(b.isBase?3.2:DR[b.ch].m))):0; }
 function myB(){ return BASE[me.team]; }
 function enB(){ return BASE[1-me.team]; }
-function ramBase(){ const b=enB(); if(G.rule!=='base'||!b||b.dead||me.dead||me.ch!==2) return; const dmg=ramOf(me,b); if(dmg>0){ me.cd=1.2; hurt(b,dmg,'ram'); say('Таран!',1); me.v.multiplyScalar(-.4); } }
-function ramCheck(){ if(me.dead) return; for(const o of D){ if(o===me||o.dead) continue; const en=o.side!==me.side, dmg=en?ramOf(me,o):0; if(dmg>0){ me.cd=1.2; hurt(o,dmg,'ram'); say('Таран!',1); }
+function ramBase(){ const b=enB(); if(G.rule!=='base'||!b||b.dead||me.dead||me.ch!==2) return; const dmg=ramOf(me,b); if(dmg>0){ me.cd=2.5; hurt(b,dmg,'ram'); say('Таран!',1); me.v.multiplyScalar(-.4); } }
+function ramCheck(){ if(me.dead) return; for(const o of D){ if(o===me||o.dead) continue; const en=o.side!==me.side, dmg=en?ramOf(me,o):0; if(dmg>0){ me.cd=2.5; hurt(o,dmg,'ram'); say('Таран!',1); }
     tA.copy(o.p).sub(me.p); const dist=tA.length(); if((dist>1.15&&!dmg)||dist<1e-4) continue; tA.multiplyScalar(1/dist);
     const vr=(me.v.x-o.v.x)*tA.x+(me.v.y-o.v.y)*tA.y+(me.v.z-o.v.z)*tA.z;
     if(vr>0){ if(en&&!dmg&&vr>6&&me.cd<=0&&me.ch!==2){ me.cd=.8; hurt(o,6,'bump'); } me.v.addScaledVector(tA,-vr*1.2); if(o.bot&&o.local) o.v.addScaledVector(tA,vr*.8); }
     if(dist<1.15) me.p.addScaledVector(tA,-(1.15-dist)); } }
-function botRam(bot){ if(bot.dead) return; const eb=G.rule==='base'?BASE[1-bot.team]:null; if(eb&&!eb.dead&&bot.ch===2){ const d0=ramOf(bot,eb); if(d0>0){ bot.cd=1.2; hurt(eb,d0,'ram',bot); bot.v.multiplyScalar(-.4); } }
-  for(const e of D){ if(e.side===bot.side||e.dead) continue; const dmg=ramOf(bot,e); if(dmg>0){ bot.cd=1.2; hurt(e,dmg,'ram',bot); bot.v.multiplyScalar(-.4); break; } } }
+function botRam(bot){ if(bot.dead) return; const eb=G.rule==='base'?BASE[1-bot.team]:null; if(eb&&!eb.dead&&bot.ch===2){ const d0=ramOf(bot,eb); if(d0>0){ bot.cd=2.5; hurt(eb,d0,'ram',bot); bot.v.multiplyScalar(-.4); } }
+  for(const e of D){ if(e.side===bot.side||e.dead) continue; const dmg=ramOf(bot,e); if(dmg>0){ bot.cd=2.5; hurt(e,dmg,'ram',bot); bot.v.multiplyScalar(-.4); break; } } }
 function botTarget(d){ let best=null, bd=1e12; for(const e of D){ if(e.side===d.side||e.dead) continue; const q=e.p.distanceToSquared(d.p); if(q<bd){ bd=q; best=e; } } const eb=G.rule==='base'?BASE[1-d.team]:null; if(eb&&!eb.dead&&(!best||bd>55*55)) return eb; return best; }
 
 /* ---------- комп'ютер ---------- */
@@ -191,9 +209,9 @@ function botThink(d,tg,bs,dt){ const p=DR[d.ch], inp=d.inp; if(d.dead||!tg||tg.d
   let da=Math.atan2(-tA.x,-tA.z)+bs.err-d.yaw; da=Math.atan2(Math.sin(da),Math.cos(da)); inp.yaw=clamp(-da*2.2,-1,1);
   const fwd=Math.abs(da)<.9?clamp((hd-want)/8,-1,1):0; inp.my=fwd*(d.ch===2?1:.85); inp.mx=d.ch===2?(hd>11?Math.sin(G.t*2.6)*.75:0):(hd<want*2.2?bs.sd*[.8,.65,0,.4,.5][d.ch]:Math.sin(G.t*.7+d.ch)*.3); inp.alt=clamp((Math.min(bs.ty,p.ceil*.9)-d.p.y)*.5,-1,1);
   if(bs.wall){ inp.alt=1; inp.my=Math.min(inp.my,.15); } if(bs.esc>0){ inp.mx=bs.sd; inp.my=-.5; inp.alt=1; }
-  if(d.batt<.2) inp.my*=.4; inp.dash=d.ch===2&&hd<15&&Math.abs(da)<.3;
+  if(d.batt<.2) inp.my*=.4; inp.dash=d.ch===2&&hd<30&&Math.abs(da)<.5&&!d.hook;
   aimOf(d,tg,tB); if(d.ch===4&&d.lock&&d.cd<=0){ inp.mx=0; inp.my=0; } d.lockT=d.lock&&(d.ch!==4||(d.cd<=0&&d.v.length()<5))?d.lockT+dt:0; inp.fire=d.lockT>(d.ch===4?1:.25)+(1-G.botSkill)*.7; if(d.ch===4){ d.aimT=d.lockT; d.aimId=tg.isBase?100+tg.team:tg.id; }
-  if(inp.fire&&d.cd<=0&&d.ch!==2&&G.phase==='fight'){ const e=(1-G.botSkill)*.09; tB.x+=(Math.random()-.5)*e; tB.y+=(Math.random()-.5)*e; tB.z+=(Math.random()-.5)*e; fire(d,tg,false,tB.clone().normalize()); if(d.ch===4) d.lockT=0; } }
+  if(inp.fire&&(d.ch===2?d.hcd:d.cd)<=0&&G.phase==='fight'){ const e=(1-G.botSkill)*.09; tB.x+=(Math.random()-.5)*e; tB.y+=(Math.random()-.5)*e; tB.z+=(Math.random()-.5)*e; fire(d,tg,false,tB.clone().normalize()); if(d.ch===4) d.lockT=0; } }
 
 /* ---------- етап 4: режими, база, прапор, артефакти, шум ---------- */
 const RULES={duel:{n:'Дуель',d:'Збий суперників. Раунд за тим, хто лишився в повітрі. До 3 раундів.'},base:{n:'База',d:'Знайди базу суперника і знищ її. Свою бережи: поки ти далеко, її б\'ють.'},flag:{n:'Прапор',d:'Прапор схований і щохвилини міняє місце. Видно лише відстань до нього. До 5 прапорів.'}};
@@ -288,7 +306,7 @@ function fogStart(){ const f={x:(Math.random()-.5)*170,z:(Math.random()-.5)*150,
 function skyStep(){ cloudPos(); const g=1-.45*wet; for(const c of CLD){ c.m.position.copy(c.p); c.m.material.color.setRGB(g,g,g+.02); } const f=G.fog; fogM.visible=!!f; if(f){ fogM.position.set(f.x,12,f.z); fogM.scale.set(f.r,24,f.r); fogM.material.opacity=.32*Math.min(1,f.t/3); } birdDraw(); }
 
 /* ---------- крок гри ---------- */
-function remoteStep(d,dt){ const r=d.rp; if(!r) return; r.age+=dt; const a=Math.min(r.age,.2), k=Math.min(1,dt*18); d.p.x+=(r.p[0]+r.v[0]*a-d.p.x)*k; d.p.y+=(r.p[1]+r.v[1]*a-d.p.y)*k; d.p.z+=(r.p[2]+r.v[2]*a-d.p.z)*k; d.v.set(r.v[0],r.v[1],r.v[2]); d.yaw=r.a[0]; d.pitch=r.a[1]; d.roll=r.a[2]; d.T=r.T; d.hp=r.hp; d.batt=r.b; d.tang=r.tg; d.dash=r.ds?.2:0; d.prop=r.pr; d.shield=(r.fl&1)?1:0; d.boost=(r.fl&2)?1:0; d.aimId=r.at; d.aimT=r.at==null?0:1; d.zoom=r.zm; d.el=r.el;
+function remoteStep(d,dt){ const r=d.rp; if(!r) return; r.age+=dt; const a=Math.min(r.age,.2), k=Math.min(1,dt*18); d.p.x+=(r.p[0]+r.v[0]*a-d.p.x)*k; d.p.y+=(r.p[1]+r.v[1]*a-d.p.y)*k; d.p.z+=(r.p[2]+r.v[2]*a-d.p.z)*k; d.v.set(r.v[0],r.v[1],r.v[2]); d.yaw=r.a[0]; d.pitch=r.a[1]; d.roll=r.a[2]; d.T=r.T; d.hp=r.hp; d.batt=r.b; d.tang=r.tg; d.dash=r.ds?2:0; d.prop=r.pr; d.shield=(r.fl&1)?1:0; d.boost=(r.fl&2)?1:0; d.aimId=d.ch===4?r.at:null; d.aimT=d.ch===4&&r.at!=null?1:0; d.hookId=d.ch===2?r.at:null; d.zoom=r.zm; d.el=r.el;
   if(G.rule!=='duel'&&d.dead&&!(r.fl&4)){ d.dead=false; d.mesh.visible=true; d.p.set(r.p[0],r.p[1],r.p[2]); } }
 function pickTarget(){ let tg=null; const es=D.filter(d=>isEnemy(d)&&!d.dead).sort((a,b)=>a.p.distanceToSquared(me.p)-b.p.distanceToSquared(me.p)); foe=es[0]||D.find(isEnemy)||null;
   for(const e of es){ aimOf(me,e,tB); if(me.lock){ tg=e; break; } }
@@ -300,12 +318,12 @@ function step(dt){ G.t+=dt;
   if(G.rain>0){ G.rain-=dt; if(G.rain<=0){ say('Дощ минув',2.5); if(auth()) fogStart(); } }
   if(G.fog){ G.fog.t-=dt; if(G.fog.t<=0) G.fog=null; }
   birdStep(dt);
-  const inp=me.inp; inp.mx=clamp(I.mx+((key.d?1:0)-(key.a?1:0)),-1,1); inp.my=clamp(I.my+((key.w?1:0)-(key.s?1:0)),-1,1); inp.yaw=clamp(I.yaw+((key.right?1:0)-(key.left?1:0)),-1,1); const scoped=me.ch===4&&me.zoom>0; if(scoped&&(me.dead||me.tang>0)) scopeOff(); inp.alt=scoped?clamp((key.up?1:0)-(key.down?1:0),-1,1):clamp(I.alt+((key.up||key.aup?1:0)-(key.down||key.adn?1:0)),-1,1); if(scoped) me.el=clamp(me.el+(I.alt+((key.aup?1:0)-(key.adn?1:0)))*(me.zoom===2?11:22)*RAD*dt,-1.15,.75); inp.dash=I.dash||!!key.dash||(G.auto&&me.ch===2&&me.lock&&G.phase==='fight');
+  const inp=me.inp; inp.mx=clamp(I.mx+((key.d?1:0)-(key.a?1:0)),-1,1); inp.my=clamp(I.my+((key.w?1:0)-(key.s?1:0)),-1,1); inp.yaw=clamp(I.yaw+((key.right?1:0)-(key.left?1:0)),-1,1); const scoped=me.ch===4&&me.zoom>0; if(scoped&&(me.dead||me.tang>0)) scopeOff(); inp.alt=scoped?clamp((key.up?1:0)-(key.down?1:0),-1,1):clamp(I.alt+((key.up||key.aup?1:0)-(key.down||key.adn?1:0)),-1,1); if(scoped) me.el=clamp(me.el+(I.alt+((key.aup?1:0)-(key.adn?1:0)))*(me.zoom===2?11:22)*RAD*dt,-1.15,.75); inp.dash=I.dash||!!key.dash;
   if(G.autoMe&&foe) botThink(me,foe,botS[0],dt);
   stepD(me,dt);
   for(const d of D){ if(d===me) continue; if(d.bot&&d.local){ const bt=botTarget(d); d.tgt=bt; botThink(d,bt,d.bs,dt); stepD(d,dt); botRam(d); } else remoteStep(d,dt); }
   if(D.length>1){ ramCheck(); ramBase(); if(G.autoMe){ foe=D.find(d=>isEnemy(d)&&!d.dead)||D.find(isEnemy)||null; } else { const tg=pickTarget(); me.tgt=tg; if(me.ch===4){ me.aimT=0; me.aimId=null; const want=I.fire||!!key.fire; if((I.fireTap||(want&&!G.fireHeld))&&me.cd<=0&&G.phase==='fight'&&me.tang<=0) snipe(me); G.fireHeld=want; }
-      else if((I.fire||key.fire||(G.auto&&me.lock))&&me.cd<=0&&G.phase==='fight') fire(me,tg,false,tB.clone()); }
+      else if((I.fire||key.fire||(G.auto&&me.lock))&&(me.ch===2?me.hcd:me.cd)<=0&&G.phase==='fight') fire(me,tg,false,tB.clone()); }
     I.fireTap=false;
     G.aimed=D.some(q=>{ if(q.ch!==4||q.side===me.side||q.dead) return false; if(q.aimT>0&&q.aimId===me.id) return true; if(!q.zoom||!q.ld) return false; tA.copy(me.p).sub(q.p); const al=tA.dot(q.ld); return al>2&&al<q.le+2&&Math.sqrt(Math.max(0,tA.lengthSq()-al*al))<2.2; }); if(G.aimed&&!me.dead){ G.warnT=(G.warnT||0)-dt; if(G.warnT<=0){ G.warnT=.4; beep(1250,0,.06,'square',.12); } }
     detect(dt); pkStep(dt); }
@@ -362,7 +380,7 @@ function onMsg(m){ if(!m||typeof m!=='object') return; const from=m.from|0, c4=v
    case 'go': if(!isHost&&m.cfg&&Array.isArray(m.cfg.players)&&m.cfg.players.some(q=>(q.id|0)===myId)){ start({kind:'net',myId:myId,rule:String(m.cfg.rule),fmt:m.cfg.fmt,bi:m.cfg.bi,players:m.cfg.players.slice(0,9).map(q=>({id:q.id|0,ch:c4(q.ch),team:q.team?1:0,bot:!!q.bot}))}); } break;
    case 's': { const d=dOf(from===0&&m.id!=null?(m.id|0):from); if(play&&d&&!d.local&&Array.isArray(m.p)&&Array.isArray(m.v)&&Array.isArray(m.a)){ const first=!d.rp; d.rp={p:m.p.map(Number),v:m.v.map(Number),a:m.a.map(Number),T:+m.T||0,hp:+m.hp||0,b:+m.b||0,tg:+m.tg||0,ds:m.ds?1:0,pr:m.pr==null?100:+m.pr,fl:m.fl|0,at:m.at==null?null:(m.at|0),zm:clamp(m.zm|0,0,2),el:clamp(+m.el||0,-1.2,.8),age:0}; if(first) d.p.set(d.rp.p[0],d.rp.p[1],d.rp.p[2]);
        if(from===0&&!G.host){ if(m.ct!=null){ const off=+m.ct-G.t; G.ctOff=Math.abs(off-G.ctOff)>1?off:G.ctOff+(off-G.ctOff)*.05; } if(Array.isArray(m.bh)&&G.rule==='base') for(let t=0;t<2;t++){ const b=BASE[t], nh=+m.bh[t]; if(b&&isFinite(nh)){ if(t===me.team&&nh<b.hp-.5) baseAlert(); b.hp=nh; } } } } break; }
-   case 'f': { const d=dOf(from===0&&m.id!=null?(m.id|0):from); if(play&&d&&!d.local&&Array.isArray(m.o)&&Array.isArray(m.d)){ const sv=d.p.clone(); d.cd=0; d.tang=0; d._e=clamp(+m.e||0,0,170); d.p.set(+m.o[0],+m.o[1],+m.o[2]); fire(d,d.side!==me.side?me:null,true,new THREE.Vector3(+m.d[0],+m.d[1],+m.d[2]).normalize()); d.p.copy(sv); } break; }
+   case 'f': { const d=dOf(from===0&&m.id!=null?(m.id|0):from); if(play&&d&&!d.local&&Array.isArray(m.o)&&Array.isArray(m.d)){ const sv=d.p.clone(); d.cd=0; d.hcd=0; d.hook=null; d.tang=0; d._e=clamp(+m.e||0,0,170); d.p.set(+m.o[0],+m.o[1],+m.o[2]); fire(d,d.side!==me.side?me:null,true,new THREE.Vector3(+m.d[0],+m.d[1],+m.d[2]).normalize()); d.p.copy(sv); } break; }
    case 'hit': { const d=dOf(m.v==null?G.myId:(m.v|0)); if(play&&d&&d.local&&!d.dead&&G.phase==='fight') applyHit(d,clamp(+m.d||0,0,110),m.k,m.by==null?from:(m.by|0)); break; }
    case 'dead': { const d=dOf(from===0&&m.id!=null?(m.id|0):from); if(play&&d&&!d.local&&!d.dead){ d.dead=true; if(d.rp) d.rp.fl|=4; const mine=m.by!=null&&(m.by|0)===G.myId; say((d.side===me.side?'Напарника збито':'Суперника збито')+(mine?' — твоя робота!':''),2.5); if(d.side!==me.side) [523,659,784].forEach((f,i)=>beep(f,i*.12,.2,'triangle',.16)); } break; }
    case 'rnd': if(play&&!G.host&&Array.isArray(m.sc)){ G.sc=[0,1,2,3,4,5,6,7].map(i=>m.sc[i]|0); roundEnd(m.w==null?-1:(m.w|0)); } break;
@@ -382,14 +400,15 @@ function onMsg(m){ if(!m||typeof m!=='object') return; const from=m.from|0, c4=v
 /* раз на 2 с: гість озивається до господаря; хто мовчить 20 с — того вважаємо відключеним */
 setInterval(()=>{ if(!inRoom) return; const now=performance.now(); if(isHost){ for(const k in conns){ const c=conns[k]; if(c._t&&now-c._t>20000){ try{c.close();}catch(e){} if(conns[k]===c) drop(+k); } } } else { send({t:'pi',ts:now},0); if(lastHost&&now-lastHost>20000) netFail('Зв\'язок із кімнатою обірвався. Зайди ще раз за тим самим посиланням.'); } },2000);
 function netFrame(dt){ if(G.kind!=='net'||!inRoom) return; sendT+=dt; const r=v=>Math.round(v*100)/100;
-  if(sendT>=1/(D.length>4?10:D.length>2?15:25)&&G.mode==='play'){ sendT=0; const mk=q=>({t:'s',id:q.id,p:[r(q.p.x),r(q.p.y),r(q.p.z)],v:[r(q.v.x),r(q.v.y),r(q.v.z)],a:[r(q.yaw),r(q.pitch),r(q.roll)],T:r(q.T),hp:Math.round(q.hp),b:r(q.batt),tg:r(Math.max(0,q.tang)),ds:q.dash>0?1:0,pr:Math.round(q.prop),fl:(q.shield>0?1:0)|(q.boost>0?2:0)|(q.dead?4:0),at:(q.ch===4&&q.aimT>0&&q.aimId!=null)?q.aimId:null,zm:q.ch===4?q.zoom:0,el:q.ch===4?r(q.el):0}); const m=mk(me); if(isHost) for(const q of D) if(q.bot&&q.local) send(mk(q));
+  if(sendT>=1/(D.length>4?10:D.length>2?15:25)&&G.mode==='play'){ sendT=0; const mk=q=>({t:'s',id:q.id,p:[r(q.p.x),r(q.p.y),r(q.p.z)],v:[r(q.v.x),r(q.v.y),r(q.v.z)],a:[r(q.yaw),r(q.pitch),r(q.roll)],T:r(q.T),hp:Math.round(q.hp),b:r(q.batt),tg:r(Math.max(0,q.tang)),ds:q.dash>1.1?1:0,pr:Math.round(q.prop),fl:(q.shield>0?1:0)|(q.boost>0?2:0)|(q.dead?4:0),at:(q.ch===4&&q.aimT>0&&q.aimId!=null)?q.aimId:(q.ch===2&&q.hook)?(q.hook.tg.isBase?100+q.hook.tg.team:q.hook.tg.id):null,zm:q.ch===4?q.zoom:0,el:q.ch===4?r(q.el):0}); const m=mk(me); if(isHost) for(const q of D) if(q.bot&&q.local) send(mk(q));
     if(isHost){ m.ct=r(G.t); if(G.rule==='base') m.bh=[BASE[0]?Math.round(BASE[0].hp):300,BASE[1]?Math.round(BASE[1].hp):300]; } send(m); }
 }
 
 /* ---------- камера, індикатори ---------- */
 const tv=new THREE.Vector3(), pv=new THREE.Vector3();
 function placeD(d){ const m=d.mesh; if(!m) return; m.position.copy(d.p); m.rotation.order='YXZ'; m.rotation.y=d.yaw; m.rotation.x=-d.pitch; m.rotation.z=-d.roll; d.spin+=d.dead?.1:.9+Math.sqrt(Math.max(0,d.T)/(DR[d.ch].m*GR))*1.6; const pr=m.userData.props; for(let i=0;i<pr.length;i++) pr[i].rotation.y=d.spin*(i%2?1:-1); m.userData.web.visible=d.tang>0; m.userData.sh.visible=d.shield>0; m.userData.bo.visible=d.boost>0;
-  if(d.laser){ const tg=d.aimT>0&&!d.dead&&d.aimId!=null?(d.aimId>=100?BASE[d.aimId-100]:D.find(q=>q.id===d.aimId)):null, a=d.laser.geometry.attributes.position, sc=d.zoom>0&&!d.dead; d.laser.visible=(!!tg&&!tg.dead)||sc;
+  if(d.laser&&d.ch===2){ const hk=d.dead?null:d.local?(d.hook&&d.hook.tg):(d.hookId!=null?(d.hookId>=100?BASE[d.hookId-100]:D.find(q=>q.id===d.hookId)):null); d.laser.visible=!!hk&&!hk.dead; if(d.laser.visible){ const a=d.laser.geometry.attributes.position; a.setXYZ(0,d.p.x,d.p.y,d.p.z); a.setXYZ(1,hk.p.x,hk.p.y,hk.p.z); a.needsUpdate=true; d.laser.material.opacity=1; } }
+  else if(d.laser){ const tg=d.aimT>0&&!d.dead&&d.aimId!=null?(d.aimId>=100?BASE[d.aimId-100]:D.find(q=>q.id===d.aimId)):null, a=d.laser.geometry.attributes.position, sc=d.zoom>0&&!d.dead; d.laser.visible=(!!tg&&!tg.dead)||sc;
     if(sc){ if(!d.ld) d.ld=new THREE.Vector3(); aimDir(d,d.ld); pv.copy(d.p).addScaledVector(d.ld,.6); d.le=sray(pv,d.ld,170); a.setXYZ(0,pv.x,pv.y,pv.z); a.setXYZ(1,pv.x+d.ld.x*d.le,pv.y+d.ld.y*d.le,pv.z+d.ld.z*d.le); a.needsUpdate=true; d.laser.material.opacity=d===me?.25:.7; }
     else if(d.laser.visible){ a.setXYZ(0,d.p.x,d.p.y-.05,d.p.z); a.setXYZ(1,tg.p.x,tg.p.y,tg.p.z); a.needsUpdate=true; d.laser.material.opacity=.45+.4*Math.abs(Math.sin(G.t*12)); } }
   if(d===me&&!d.dead) m.visible=!(d.ch===4&&d.zoom); }
@@ -429,7 +448,7 @@ function hud(){ const p=DR[me.ch], hs=Math.hypot(me.v.x,me.v.z), wr=Math.atan2(G
     for(const e of D){ if(e===me) continue; const el=tagEls[ti++]; if(!el) break; const en=e.side!==me.side; if(e.dead||(en&&!e.det)){ el.hidden=true; continue; } el.hidden=false; el.style.color=en?'#FF6050':hex(e.col); pv.copy(e.p); pv.y+=.6; pv.project(cam); const on=pv.z<1&&Math.abs(pv.x)<.96&&Math.abs(pv.y)<.94;
       if(on){ el.className='tg'; el.style.left=((pv.x+1)/2*100)+'%'; el.style.top=((1-pv.y)/2*100)+'%'; el.textContent=(en?'':label(e)+' · ')+(e.det===2?Math.round(me.p.distanceTo(e.p))+' м':'♪'); }
       else { let x=pv.x, y=pv.y; if(pv.z>1){x=-x;y=-y;} const mlen=Math.max(Math.abs(x),Math.abs(y))||1; x=x/mlen*.9; y=y/mlen*.86; el.className='tg off'; el.style.left=((x+1)/2*100)+'%'; el.style.top=((1-y)/2*100+4)+'%'; el.textContent=en?'◆':'●'; } }
-    $('bFire').classList.toggle('cd',me.cd>0); $('bDash').classList.toggle('cd',me.dcd>0); }
+    $('bFire').classList.toggle('cd',(me.ch===2?me.hcd:me.cd)>0); $('bDash').classList.toggle('cd',me.dcd>0); }
   for(;ti<tagEls.length;ti++) tagEls[ti].hidden=true;
   const scp=me.ch===4&&me.zoom>0&&!me.dead; scEl.hidden=!scp; if(scp){ scEl.className=G.onT?'on':''; scEl.firstChild.textContent='×'+(me.zoom===2?8:4)+' · '+(G.rng>=169?'далі 170 м':Math.round(G.rng)+' м')+(me.cd>0?' · перезаряд '+me.cd.toFixed(1)+' с':' · готово'); } $('bScope').classList.toggle('on',scp);
   let m=G.msgT>0?G.msg:''; if(G.aimed&&!me.dead&&duel) m='На тебе цілиться Бабка — ховайся!';  if(!m){ if(me.batt<=0) m='Заряд скінчився'+(duel?'':'. Натисни «На старт»'); else if(me.batt<.15) m='Заряд на межі — шукай блакитну зарядку'; else if(me.prop<30) m='Гвинти побиті — на блакитній зарядці їх полагодять'; else if(Math.abs(me.p.x)>W.LIM||Math.abs(me.p.z)>W.LIM) m='Сигнал слабшає — вертайся'; else if(me.corn) m='У кукурудзі: стебла гальмують'; else if(inFog(me.p)) m='Туман: видно метрів на двадцять'; else if(inCloud(me.p)) m='У хмарі нічого не видно'; }
@@ -450,7 +469,7 @@ function audioFrame(){ if(!AC)return; gR.gain.setTargetAtTime(G.mode==='play'&&G
 /* ---------- інтерфейс ---------- */
 const ov=$('ov'), card=$('card'); let autoBig=false;
 function ui(){ const play=G.mode==='play'; if(autoBig&&!play) setBig(false); document.body.classList.toggle('m',!play); ov.hidden=play; $('bHome').hidden=!play||G.kind!=='free'; $('bMenu').hidden=G.mode==='menu'; $('bMenu').textContent=inRoom||G.mode==='room'?'Вийти з кімнати':'Меню'; $('hL').hidden=$('map').hidden=!play;
-  $('bFire').hidden=!play||G.kind==='free'||me.ch===2; $('bDash').hidden=!play||me.ch!==2; $('bScope').hidden=!play||me.ch!==4; if(!play){ scopeOff(); scEl.hidden=true; } if(!play){ $('hT').hidden=$('aim').hidden=true; for(const e of tagEls) e.hidden=true; } $('tag').hidden=true;
+  $('bFire').hidden=!play||G.kind==='free'; $('bFire').textContent=me.ch===2?'ГАРПУН':'ВОГОНЬ'; $('bDash').hidden=!play||me.ch!==2; $('bScope').hidden=!play||me.ch!==4; if(!play){ scopeOff(); scEl.hidden=true; } if(!play){ $('hT').hidden=$('aim').hidden=true; for(const e of tagEls) e.hidden=true; } $('tag').hidden=true;
   if(play){ setTimeout(resize,30); return; }
   const bar=(l,v)=>'<span>'+l+'</span><i style="--w:'+Math.round(clamp(v,.08,1)*100)+'%"></i>';
   if(G.mode==='menu'){
