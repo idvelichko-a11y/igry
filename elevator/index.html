@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="uk" data-ver="2">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Елеватор</title>
+<meta name="description" content="Головоломка-сортування: розклади пшеницю, кукурудзу, соняшник по силосах. Зерно виходить знизу, вологе — в сушарку, засмічене — в сепаратор.">
+<meta name="theme-color" content="#1F4E5F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Unbounded:wght@500;700&display=swap">
+<style>
+:root{--bg:#F2F4F4;--card:#FFFFFF;--fg:#2C3E50;--mute:#66767F;--line:#D5DCDE;--main:#1F4E5F;--accent:#C9A961;
+  --ov:rgba(14,26,31,.92);--ov-fg:#FFFFFF;--ov-mute:#C6D3D8;--star:#E3C77F;
+  --f-ui:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--f-head:"Unbounded","Manrope",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10181B;--card:#18232A;--fg:#E6ECEE;--mute:#93A3AA;--line:#2A3940;--main:#86BACB;--accent:#D9BD7E;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10181B;--card:#18232A;--fg:#E6ECEE;--mute:#93A3AA;--line:#2A3940;--main:#86BACB;--accent:#D9BD7E;color-scheme:dark}
+*{box-sizing:border-box} html,body{margin:0} [hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.5;overscroll-behavior:none;
+  padding-block:12px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin:0}
+h1{font-family:var(--f-head);font-weight:700;font-size:clamp(1.1rem,3.4vw,1.7rem);line-height:1.2;margin:2px 0 0;color:var(--main)}
+.stage{position:relative;background:#BFD9E8;border-radius:14px;overflow:hidden;aspect-ratio:16/9;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+@media (max-width:620px){.stage{aspect-ratio:4/4.2}}
+.stage>canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ov{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:10px;background:rgba(10,20,24,.35)}
+.card{background:var(--ov);color:var(--ov-fg);border-radius:14px;padding:14px 16px;max-width:640px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:9px;text-align:center}
+.card h3{font-family:var(--f-head);font-weight:700;font-size:clamp(1rem,3.6vw,1.35rem);line-height:1.25;margin:0}
+.card p{margin:0;font-size:.88rem;color:var(--ov-mute)} .card .k{font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--star)}
+.card .new{background:rgba(227,199,127,.14);border:1px solid rgba(227,199,127,.45);border-radius:10px;padding:8px 10px;color:#FFF3D0;text-align:left;font-size:.86rem}
+.card .facts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center} .card .facts span{font-size:.76rem;background:rgba(255,255,255,.08);border-radius:999px;padding:3px 10px;color:#E6EEF1}
+.btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:2px}
+.btns button,.big{font:inherit;font-weight:800;font-size:.95rem;padding:10px 20px;border-radius:999px;border:0;background:var(--star);color:#1B2A30;cursor:pointer;min-height:44px}
+.btns button.sec{background:transparent;color:var(--ov-fg);border:1px solid rgba(255,255,255,.5)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media (max-width:520px){.modes{grid-template-columns:1fr}}
+.modes button{font:inherit;color:#fff;text-align:left;border-radius:14px;border:2px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-height:44px}
+.modes button b{font-family:var(--f-head);font-size:1.02rem} .modes button span{font-size:.8rem;color:var(--ov-mute)} .modes button:hover{border-color:var(--star)}
+.months{display:flex;flex-direction:column;gap:8px;text-align:left}
+.month b{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--star)}
+.lv{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px}
+.lv button{font:inherit;color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:6px 6px;cursor:pointer;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.lv button small{font-size:.66rem;color:var(--ov-mute);line-height:1.15;text-align:center} .lv button i{font-style:normal;color:var(--star);font-size:.78rem;letter-spacing:.05em}
+.lv button:disabled{opacity:.32;cursor:default} .lv button.boss{border-color:rgba(227,199,127,.6)}
+.stars{font-size:2rem;letter-spacing:.12em;color:var(--star)} .stars .off{color:rgba(255,255,255,.2)}
+.rows{display:grid;grid-template-columns:1fr auto;gap:3px 12px;text-align:left;font-size:.86rem;max-width:380px;width:100%;margin:0 auto}
+.rows span{color:var(--ov-mute)} .rows b{text-align:right} .rows .bad{color:#FF9C8A} .rows .ok{color:#9FE3A5}
+.ctl{display:flex;gap:6px;justify-content:center;align-items:stretch;flex-wrap:nowrap}
+.ctl button{font:inherit;font-weight:800;font-size:.9rem;min-height:52px;min-width:52px;padding:4px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.ctl button small{font-size:.62rem;font-weight:700;color:var(--mute)} .ctl button.main{background:var(--main);color:#fff;border-color:var(--main)} .ctl button.main small{color:#d8e8ee}
+.ctl button.wide{flex:1 1 auto} .ctl button:active{transform:translateY(1px)}
+.row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row2 button{font:inherit;font-size:.84rem;font-weight:700;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
+.row2 .hint{font-size:.8rem;color:var(--mute);flex:1 1 240px;min-width:0}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#bTop{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:8px;z-index:5;font:inherit;font-weight:800;font-size:.78rem;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(14,26,31,.6);color:#fff;cursor:pointer}
+/* гра на весь екран */
+body.play{overflow:hidden;padding:0}
+body.play .wrap{position:fixed;inset:0;max-width:none;gap:0;background:#0d1a1f;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+body.play .wrap>header,body.play .row2{display:none}
+body.play .stage{flex:1 1 auto;aspect-ratio:auto;min-height:0;border-radius:0}
+body.play .ctl{padding:6px;background:#0d1a1f} body.play .ctl button{flex:1 1 0;min-width:0;max-width:110px} body.play .ctl button{background:#1d2c33;color:#fff;border-color:#2c3f47} body.play .ctl button small{color:#a9bcc4} body.play .ctl button.main{background:#2F7FA0;border-color:#2F7FA0}
+@media (orientation:landscape) and (max-height:500px){ body.play .wrap{flex-direction:row} body.play .ctl{flex-direction:column;width:auto;flex-wrap:nowrap;justify-content:center} body.play .ctl button{flex:0 0 auto;min-height:44px;min-width:76px;max-width:none;padding:2px 8px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><p class="eyebrow"><a href="../" style="color:inherit">Поле зору · ігри</a></p><h1>Елеватор</h1></header>
+  <div class="stage" id="stage">
+    <canvas id="c" aria-label="Елеватор: силоси зі зерном у розрізі"></canvas>
+    <button id="bTop" hidden>⏸ Пауза</button>
+    <div class="ov" id="ov"><div class="card" id="card"></div></div>
+  </div>
+  <div class="ctl" id="ctl" hidden>
+    <button id="bUndo">↶<small>назад</small></button>
+    <button id="bVent">❄<small>вентилювати</small></button>
+    <button id="bRe">⟲<small>заново</small></button>
+    <button id="bPause"><b style="letter-spacing:-1px">❚❚</b><small>пауза</small></button>
+  </div>
+  <div class="row2">
+    <button id="bSnd" aria-pressed="true">Звук: увімк.</button>
+    <span class="hint">Торкнись силосу, з якого брати, потім — куди сипати. Зерно виходить знизу силосу й засипається згори. На комп'ютері ще: Z — назад, V — вентилювати, R — заново, P — пауза.</span>
+  </div>
+</div>
+<script>
+/* Елеватор — правила. Один модуль для гри й для перевірки рівнів у node. */
+(function(root){
+"use strict";
+/* культури: n — назва, col — колір, p — умовна ціна за тонну, sh — усушка при сушінні */
+const CROPS={
+ w2:{n:'Пшениця 2 кл.',s:'Пш 2',col:'#E2B84A',dk:'#B88E2A',p:265,sh:.05},
+ w3:{n:'Пшениця 3 кл.',s:'Пш 3',col:'#D8A94F',dk:'#A87C30',p:235,sh:.05},
+ ba:{n:'Ячмінь',s:'Ячм',col:'#E8DDA4',dk:'#B9AC6E',p:200,sh:.05},
+ co:{n:'Кукурудза',s:'Кук',col:'#F0A030',dk:'#B86E12',p:190,sh:.08},
+ su:{n:'Соняшник',s:'Сон',col:'#4A4A50',dk:'#26262B',p:480,sh:.06},
+ ra:{n:'Ріпак',s:'Ріп',col:'#3B3026',dk:'#1E1712',p:520,sh:.05,fine:1},
+ so:{n:'Соя',s:'Соя',col:'#E9D9A8',dk:'#B8A673',p:420,sh:.05},
+ sp:{n:'Зіпсоване',s:'Гниль',col:'#6B5A3E',dk:'#3F3423',p:0,sh:0},
+};
+const UNIT=100; // тонн в одній частці
+function L(c,u,o){ o=o||{}; return {c:c,u:u,w:!!o.w,d:!!o.d,m:!!o.m,h:o.h||0,t:o.t!=null?o.t:u*UNIT}; }
+function key(l){ return l.c+(l.w?'w':'')+(l.d?'d':'')+(l.m?'m':''); }
+function used(k){ let s=0; for(const l of k.L) s+=l.u; return s; }
+function free(k){ return k.cap-used(k); }
+function clone(st){ return {K:st.K.map(k=>Object.assign({},k,{L:k.L.map(l=>Object.assign({},l))})),moves:st.moves,lost:Object.assign({},st.lost),gas:st.gas}; }
+function needs(l){ return l.w||l.d||l.m||l.c==='sp'; }
+/* чи можна перелити нижній шар з a в b; повертає причину відмови або '' */
+function why(st,a,b,opt){ const A=st.K[a], B=st.K[b]; if(a===b) return 'same'; if(!A||!B) return 'none'; if(!A.L.length) return 'Тут порожньо';
+  if(A.busy>0) return A.t==='dry'?'Сушарка ще працює':'Сепаратор ще працює'; if(B.busy>0) return B.t==='dry'?'Сушарка ще працює':'Сепаратор ще працює';
+  if(B.t==='truck') return 'Машину розвантажують, а не навантажують'; if(A.t==='wagon') return 'З вагона не беремо';
+  if(B.broken) return 'Сушарка на ремонті';
+  const l=A.L[0]; if(B.t==='waste'&&l.c!=='sp') return 'Сюди — лише зіпсоване зерно'; if(B.t!=='waste'&&l.c==='sp') return 'Зіпсоване — тільки у відходи';
+  if(B.crack&&CROPS[l.c].fine) return 'Ріпак дрібний — висиплеться крізь тріщину';
+  if(B.t==='wagon'){ const o=B.ord; if(!o) return 'none'; if(l.c!==o.c) return 'Вагон чекає: '+CROPS[o.c].n; if(l.w) return 'Вагон не прийме вологе'; if(l.d||l.m) return 'Вагон не прийме засмічене'; if(o.left<=0) return 'Вагон уже повний'; return ''; }
+  if(free(B)<=0) return 'Немає місця'; return ''; }
+/* перелити нижній шар; змінює стан */
+function move(st,a,b,opt){ opt=opt||{}; const A=st.K[a], B=st.K[b], l=A.L[0]; let amt=Math.min(l.u,B.t==='wagon'?B.ord.left:free(B)); const out=[];
+  const whole=amt===l.u, above=A.L[1];
+  const part=u=>{ const k=u/l.u; const p=Object.assign({},l,{u:u,t:l.t*k}); return p; };
+  if(opt.podmes&&whole&&above&&key(above)!==key(l)&&A.t==='silo'&&B.t!=='waste'){ if(amt>1) out.push(part(amt-1)); const m=part(1); if(above.c!==l.c) m.m=true; out.push(m); }
+  else out.push(part(amt));
+  l.t-=l.t*amt/l.u; l.u-=amt; if(l.u<=0) A.L.shift();
+  for(const p of out){ if(B.t==='dry'&&p.w){ const k=1-CROPS[p.c].sh; st.lost.dry=(st.lost.dry||0)+p.t*(1-k); p.t*=k; p.w=false; st.gas=(st.gas||0)+p.u; if(opt.timed) B.busy=opt.timed; }
+    if(B.t==='clean'&&(p.d||p.m)){ st.lost.clean=(st.lost.clean||0)+p.t*.04; p.t*=.96; p.d=false; p.m=false; if(opt.timed) B.busy=opt.timed; }
+    if(B.t==='waste'){ st.lost.spoil=(st.lost.spoil||0)+p.t; continue; }
+    if(B.t==='wagon'){ B.ord.left-=p.u; B.ord.got+=p.t; continue; }
+    p.h=0; const top=B.L[B.L.length-1]; if(top&&key(top)===key(p)&&top.c!=='sp'){ top.u+=p.u; top.t+=p.t; top.h=Math.max(top.h,p.h); } else B.L.push(p); }
+  st.moves++; return out; }
+/* нагрів вологого зерна в силосах; повертає список зіпсованих */
+function heat(st,dh,limit){ const bad=[]; for(let i=0;i<st.K.length;i++){ const k=st.K[i]; if(k.t!=='silo') continue; for(const l of k.L){ if(l.w&&l.c!=='sp'){ l.h+=dh; if(l.h>=limit){ st.lost.spoil=(st.lost.spoil||0)+0; l.c='sp'; l.w=false; l.d=false; l.m=false; bad.push(i); } } } } return bad; }
+/* розв'язано: у кожному силосі одна культура, чиста й суха, і кожна культура зібрана в одному силосі */
+function solved(st){ const seen={}; for(const k of st.K){ if(k.t==='dry'||k.t==='clean'){ if(k.L.length) return false; continue; } if(k.t!=='silo') continue; if(!k.L.length) continue; const c=k.L[0].c; if(seen[c]) return false; seen[c]=1; for(const l of k.L){ if(l.c!==c||needs(l)) return false; } } return true; }
+/* ---------- розв'язувач для перевірки рівнів (BFS) ---------- */
+function enc(st){ const g={}; const parts=st.K.map(k=>(k.t+k.cap+(k.crack?'x':''))+':'+k.L.map(l=>key(l)+l.u).join(',')); const out=[]; // однакові силоси — порядок не важливий
+  const sil=[], oth=[]; st.K.forEach((k,i)=>{ (k.t==='silo'?sil:oth).push(parts[i]); }); sil.sort(); return oth.join('|')+'#'+sil.join('|'); }
+function solve(st0,opt,maxN){ maxN=maxN||400000; const start=clone(st0); start.moves=0; const seen=new Map(); seen.set(enc(start),null); let q=[start], depth=0, n=0;
+  if(solved(start)) return {moves:0,path:[]};
+  const par=new Map();
+  while(q.length){ depth++; const nq=[]; for(const s of q){ const K=s.K; for(let a=0;a<K.length;a++){ const A=K[a]; if(!A.L.length) continue; if(A.t==='waste') continue;
+        for(let b=0;b<K.length;b++){ if(why(s,a,b,opt)) continue; const B=K[b];
+          if(A.t==='silo'&&B.t==='silo'&&!B.L.length&&A.L.length===1&&B.cap>=A.L[0].u&&!!B.crack===!!A.crack) continue; // переливати весь силос у такий самий порожній — марно
+          const ns=clone(s); move(ns,a,b,opt); const e=enc(ns); if(seen.has(e)) continue; seen.set(e,1); par.set(ns,[s,a,b]); n++; if(solved(ns)){ const path=[]; let cur=ns; while(par.has(cur)){ const p=par.get(cur); path.unshift([p[1],p[2]]); cur=p[0]; } return {moves:depth,path:path,n:n}; } nq.push(ns); if(n>maxN) return {moves:-1,n:n}; } } }
+    q=nq; } return {moves:-1,n:n}; }
+/* швидкий пошук (зважений A*): знаходить короткий розв'язок для великих рівнів; число ходів — верхня межа */
+function hEst(st){ let h=0; for(const k of st.K){ if(k.t==='dry'||k.t==='clean'){ h+=k.L.length; continue; } if(k.t!=='silo') continue; if(!k.L.length) continue; const c=k.L[0].c; let bad=false; for(const l of k.L){ if(l.c!==c) bad=true; if(needs(l)) h+=2; else if(bad) h+=1; } } return h; }
+function solveA(st0,opt,maxN,w){ maxN=maxN||300000; w=w||1.4; const start=clone(st0); start.moves=0; if(solved(start)) return {moves:0,path:[]};
+  const H=[]; const push=x=>{ H.push(x); let i=H.length-1; while(i>0){ const p=(i-1)>>1; if(H[p].f<=H[i].f) break; [H[p],H[i]]=[H[i],H[p]]; i=p; } };
+  const pop=()=>{ const top=H[0], last=H.pop(); if(H.length){ H[0]=last; let i=0; for(;;){ const l=2*i+1, r=l+1; let m=i; if(l<H.length&&H[l].f<H[m].f) m=l; if(r<H.length&&H[r].f<H[m].f) m=r; if(m===i) break; [H[m],H[i]]=[H[i],H[m]]; i=m; } } return top; };
+  const best=new Map(); best.set(enc(start),0); push({s:start,g:0,f:w*hEst(start),par:null,mv:null}); let n=0;
+  while(H.length){ const cur=pop(); const s=cur.s, K=s.K; if(best.get(enc(s))<cur.g) continue;
+    for(let a=0;a<K.length;a++){ const A=K[a]; if(!A.L.length||A.t==='waste') continue; for(let b=0;b<K.length;b++){ if(why(s,a,b,opt)) continue; const B=K[b];
+      if(A.t==='silo'&&B.t==='silo'&&!B.L.length&&A.L.length===1&&B.cap>=A.L[0].u&&!!B.crack===!!A.crack) continue;
+      const ns=clone(s); move(ns,a,b,opt); const e=enc(ns), g=cur.g+1; if(best.has(e)&&best.get(e)<=g) continue; best.set(e,g); n++;
+      const node={s:ns,g:g,f:g+w*hEst(ns),par:cur,mv:[a,b]}; if(solved(ns)){ const path=[]; let c=node; while(c.par){ path.unshift(c.mv); c=c.par; } return {moves:g,path:path,n:n}; }
+      push(node); if(n>maxN) return {moves:-1,n:n}; } } }
+  return {moves:-1,n:n}; }
+const api={CROPS:CROPS,UNIT:UNIT,L:L,key:key,used:used,free:free,clone:clone,needs:needs,why:why,move:move,heat:heat,solved:solved,solve:solve,solveA:solveA};
+if(typeof module!=='undefined'&&module.exports) module.exports=api; else root.EL=api;
+})(typeof window!=='undefined'?window:globalThis);
+
+window.EL_LEVELS=[{"m":0,"n":"Перша зміна","intro":"Силос засипають згори, а випускають знизу. Торкнись силосу, потім іншого — нижній шар піде шнеком і норією нагору другого. Зроби так, щоб у кожному силосі була одна культура.","boss":false,"podmes":false,"heat":0,"vent":0,"opt":5,"exact":true,"K":[{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0],["w3",1,0],["ba",1,0]]}]},{"m":0,"n":"Пшениця і ячмінь","intro":"Брати можна лише знизу. Подумай, що треба випустити першим.","boss":false,"podmes":false,"heat":0,"vent":0,"opt":7,"exact":true,"K":[{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["w3",1,0],["ba",1,0],["w3",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["ba",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0]]}]},{"m":0,"n":"Три силоси, три культури","intro":"Додалася соя. Порожній силос — твій запас.","boss":false,"podmes":false,"heat":0,"vent":0,"opt":8,"exact":true,"K":[{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0],["so",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["so",1,0],["ba",1,0],["so",1,0]]}]},{"m":0,"n":"Задача місяця: тісно","intro":"Запас місця малий. Рахуй наперед.","boss":true,"podmes":false,"heat":0,"vent":0,"opt":11,"exact":true,"K":[{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["so",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["w3",1,0],["so",1,0],["ba",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",2,0],["so",1,0],["w3",1,0]]},{"t":"silo","cap":2,"crack":false,"L":[["ba",1,0],["so",1,0]]}]},{"m":1,"n":"Класи пшениці","intro":"Пшениця 2-го і 3-го класу схожа, але це різне зерно. Змішаєш — усе піде за нижчим класом. Дивись на підпис шару.","boss":false,"podmes":false,"heat":0,"vent":0,"opt":8,"exact":true,"K":[{"t":"silo","cap":3,"crack":false,"L":[["w2",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0],["w2",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0],["w2",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0],["w3",1,0]]}]},{"m":1,"n":"Ріпак","intro":"Ріпак дрібний: у силос із тріщиною (позначений) його не можна — висиплеться.","boss":false,"podmes":false,"heat":0,"vent":0,"opt":9,"exact":true,"K":[{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["ra",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":true,"L":[["ba",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ra",1,0],["ba",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ra",1,0],["w3",1,0],["ba",1,0]]}]},{"m":1,"n":"Чотири культури","intro":"Більше культур, ті самі правила.","boss":false,"podmes":false,"heat":0,"vent":0,"opt":11,"exact":false,"K":[{"t":"silo","cap":3,"crack":true,"L":[["w2",1,0],["ba",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["w2",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ra",1,0],["w3",1,0],["ra",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["w2",1,0],["ra",1,0],["ba",1,0]]}]},{"m":1,"n":"Задача місяця: класи","intro":"Класи, ріпак і силос із тріщиною разом.","boss":true,"podmes":false,"heat":0,"vent":0,"opt":15,"exact":false,"K":[{"t":"silo","cap":4,"crack":false,"L":[["w2",1,0],["ba",1,0],["ra",1,0],["w2",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["ra",1,0],["w3",1,0]]},{"t":"silo","cap":4,"crack":true,"L":[["ba",1,0],["w3",1,0],["w2",1,0],["ba",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["w2",1,0],["ra",1,0]]},{"t":"silo","cap":2,"crack":false,"L":[["w3",1,0],["ra",1,0]]}]},{"m":2,"n":"Соняшник","intro":"Соняшник привезли з полів — тепер він у грі.","boss":false,"podmes":false,"heat":0,"vent":0,"opt":8,"exact":true,"K":[{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["su",1,0],["ba",1,0],["su",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["ba",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["su",1,0],["w3",1,0]]}]},{"m":2,"n":"Сміттєве зерно","intro":"Шари з крапками — засмічені. Пропусти їх через сепаратор: зерно стане чистим, але трохи ваги піде у відходи. Із сепаратора зерно треба забрати в силос.","boss":false,"podmes":false,"heat":0,"vent":0,"opt":7,"exact":true,"K":[{"t":"silo","cap":3,"crack":false,"L":[["su",1,2]]},{"t":"silo","cap":3,"crack":false,"L":[]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["su",1,2]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["su",1,0],["w3",1,0]]},{"t":"clean","cap":2,"crack":false,"L":[]}]},{"m":2,"n":"Чисте до чистого","intro":"Засмічене й чисте зерно однієї культури не зливаються в один шар, поки не очистиш.","boss":false,"podmes":false,"heat":0,"vent":0,"opt":10,"exact":false,"K":[{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["ba",1,2]]},{"t":"silo","cap":3,"crack":false,"L":[["su",1,2]]},{"t":"silo","cap":3,"crack":false,"L":[["su",1,0],["ba",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["ba",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["su",1,2]]},{"t":"clean","cap":2,"crack":false,"L":[]}]},{"m":2,"n":"Задача місяця: осінь","intro":"Мало місця й багато сміття.","boss":true,"podmes":false,"heat":0,"vent":0,"opt":13,"exact":false,"K":[{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["su",1,0],["su",1,2]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["so",1,2]]},{"t":"silo","cap":4,"crack":false,"L":[["so",1,0],["su",1,0],["su",1,2]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["so",1,0],["w3",1,0]]},{"t":"clean","cap":2,"crack":false,"L":[]}]},{"m":3,"n":"Мокра кукурудза","intro":"Шари з краплями — вологі. Їх треба висушити в сушарці: зерно трохи втратить вагу, а газ коштує грошей. Вологе зерно в силосі гріється: стежи за термометром.","boss":false,"podmes":false,"heat":14,"vent":0,"opt":7,"exact":true,"K":[{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["co",1,1],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["co",1,1]]},{"t":"silo","cap":3,"crack":false,"L":[["co",1,1]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0]]},{"t":"dry","cap":2,"crack":false,"L":[]},{"t":"waste","cap":99,"crack":false,"L":[]}]},{"m":3,"n":"Сушарка і сепаратор","intro":"Тепер є і сушарка, і сепаратор.","boss":false,"podmes":false,"heat":14,"vent":0,"opt":8,"exact":true,"K":[{"t":"silo","cap":3,"crack":false,"L":[]},{"t":"silo","cap":3,"crack":false,"L":[["co",1,1],["su",1,2]]},{"t":"silo","cap":3,"crack":false,"L":[["co",1,1]]},{"t":"silo","cap":3,"crack":false,"L":[["co",1,0],["su",1,0],["su",1,2]]},{"t":"dry","cap":2,"crack":false,"L":[]},{"t":"clean","cap":2,"crack":false,"L":[]},{"t":"waste","cap":99,"crack":false,"L":[]}]},{"m":3,"n":"Вологе й сміттєве","intro":"Буває й вологе, і засмічене водночас — тоді обидва кроки.","boss":false,"podmes":false,"heat":16,"vent":0,"opt":12,"exact":false,"K":[{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["co",1,1]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,2],["w3",1,0],["ba",1,2]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["co",1,1],["ba",1,0],["co",1,1]]},{"t":"silo","cap":3,"crack":false,"L":[]},{"t":"dry","cap":2,"crack":false,"L":[]},{"t":"clean","cap":2,"crack":false,"L":[]},{"t":"waste","cap":99,"crack":false,"L":[]}]},{"m":3,"n":"Задача місяця: жовтень","intro":"Кукурудза мокра, соняшник засмічений.","boss":true,"podmes":false,"heat":18,"vent":0,"opt":16,"exact":false,"K":[{"t":"silo","cap":4,"crack":false,"L":[["su",1,1],["co",1,0],["co",1,1],["w3",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["su",1,0],["su",1,2]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["su",1,2],["w3",1,0],["co",1,1]]},{"t":"silo","cap":4,"crack":false,"L":[["co",1,1]]},{"t":"dry","cap":2,"crack":false,"L":[]},{"t":"clean","cap":2,"crack":false,"L":[]},{"t":"waste","cap":99,"crack":false,"L":[]}]},{"m":4,"n":"Гріється!","intro":"Вологе зерно гріється швидко. Кнопка «Вентилювати» охолоджує вибраний силос (обмежено). Що зіпсувалось — лише у відходи.","boss":false,"podmes":false,"heat":5,"vent":2,"opt":8,"exact":true,"K":[{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["co",1,1]]},{"t":"silo","cap":3,"crack":false,"L":[]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["co",1,1],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["co",1,1]]},{"t":"dry","cap":2,"crack":false,"L":[]},{"t":"waste","cap":99,"crack":false,"L":[]}]},{"m":4,"n":"Два вологі силоси","intro":"Сушарка одна — вирішуй, кого рятувати першим.","boss":false,"podmes":false,"heat":6,"vent":4,"opt":13,"exact":false,"K":[{"t":"silo","cap":3,"crack":false,"L":[["co",1,1],["ba",1,0],["so",1,1]]},{"t":"silo","cap":3,"crack":false,"L":[["co",1,1]]},{"t":"silo","cap":3,"crack":false,"L":[["so",1,0],["ba",1,0],["so",1,1]]},{"t":"silo","cap":3,"crack":false,"L":[]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0],["co",1,1]]},{"t":"dry","cap":2,"crack":false,"L":[]},{"t":"waste","cap":99,"crack":false,"L":[]}]},{"m":4,"n":"Усе разом","intro":"Сушарка, сепаратор і нагрів.","boss":false,"podmes":false,"heat":7,"vent":2,"opt":12,"exact":false,"K":[{"t":"silo","cap":3,"crack":false,"L":[]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["co",1,1],["su",1,2]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["co",1,1],["su",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[]},{"t":"silo","cap":3,"crack":false,"L":[["su",1,2],["co",1,1],["w3",1,0]]},{"t":"dry","cap":2,"crack":false,"L":[]},{"t":"clean","cap":2,"crack":false,"L":[]},{"t":"waste","cap":99,"crack":false,"L":[]}]},{"m":4,"n":"Задача місяця: листопад","intro":"Багато вологого і класи пшениці.","boss":true,"podmes":false,"heat":8,"vent":4,"opt":17,"exact":false,"K":[{"t":"silo","cap":4,"crack":false,"L":[["so",1,0],["w3",1,0],["so",1,1],["w3",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["co",1,1],["w2",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["w2",1,0],["so",1,1]]},{"t":"silo","cap":4,"crack":false,"L":[["co",1,1],["w3",1,0],["co",1,1],["so",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["co",1,1],["w2",1,0]]},{"t":"dry","cap":2,"crack":false,"L":[]},{"t":"waste","cap":99,"crack":false,"L":[]}]},{"m":5,"n":"Підмішування","intro":"Коли випускаєш шар до кінця, разом з ним прослизає трохи верхнього — останні 100 т виходять «з домішкою». Їх доведеться чистити в сепараторі.","boss":false,"podmes":true,"heat":0,"vent":0,"opt":9,"exact":true,"K":[{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["w3",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["ba",1,0],["w3",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["w3",1,0]]},{"t":"clean","cap":2,"crack":false,"L":[]}]},{"m":5,"n":"Не вишкрібай","intro":"Інколи краще не випускати шар до кінця одним ходом.","boss":false,"podmes":true,"heat":0,"vent":0,"opt":12,"exact":false,"K":[{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["so",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["so",1,0],["ba",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["so",1,0],["w3",1,0],["ba",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["w3",1,0],["ba",1,0],["w3",1,0]]},{"t":"clean","cap":2,"crack":false,"L":[]}]},{"m":5,"n":"Підмішування і класи","intro":"Класи пшениці теж змішуються на межі шарів.","boss":false,"podmes":true,"heat":0,"vent":0,"opt":14,"exact":false,"K":[{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["w2",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["w2",1,0],["w3",1,0],["w2",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["w3",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["ba",1,0],["w2",1,0]]},{"t":"clean","cap":2,"crack":false,"L":[]}]},{"m":5,"n":"Задача сезону","intro":"Усе, чого навчився за сезон.","boss":true,"podmes":true,"heat":10,"vent":2,"opt":15,"exact":false,"K":[{"t":"silo","cap":4,"crack":false,"L":[["su",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["co",1,1],["su",1,2]]},{"t":"silo","cap":4,"crack":false,"L":[["w3",1,0],["co",1,1],["su",1,0],["co",1,0]]},{"t":"silo","cap":4,"crack":false,"L":[["ba",1,0],["w3",1,0]]},{"t":"silo","cap":3,"crack":false,"L":[["ba",1,0],["w3",2,0]]},{"t":"dry","cap":2,"crack":false,"L":[]},{"t":"clean","cap":2,"crack":false,"L":[]},{"t":"waste","cap":99,"crack":false,"L":[]}]}];
+
+</script>
+<script>
+/* Елеватор — головоломка-сортування зерна. «Головоломки» (рівні) і «Зміна на елеваторі» (безкінечна). */
+(function(){
+"use strict";
+const E=window.EL, CR=E.CROPS, $=id=>document.getElementById(id), clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const coarse=(()=>{ try{ return matchMedia('(pointer:coarse)').matches; }catch(e){ return false; } })(); if(coarse) document.body.classList.add('touch');
+const isLoc=/^(localhost|127\.0\.0\.1)$/.test(location.hostname), FF=isLoc?(+new URLSearchParams(location.search).get('ff')||1):1;
+const VER=+document.documentElement.dataset.ver||1;
+(async()=>{ try{ if(!/^https?:/.test(location.protocol)||!document.documentElement.dataset.ver) return; const t=await (await fetch(location.pathname+'?fresh='+Date.now(),{cache:'no-store'})).text(), m=/data-ver="(\d+)"/.exec(t), nv=m?+m[1]:0; let done=''; try{ done=sessionStorage.getItem('pz_el_upd')||''; }catch(e){}
+  if(nv>VER&&done!==String(nv)){ try{ sessionStorage.setItem('pz_el_upd',String(nv)); }catch(e){} location.reload(); } }catch(e){} })();
+const LV=window.EL_LEVELS||[];
+const MONTHS=['Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+LV.forEach((l,i)=>{ l.id=i; l.k=(l.m+1)+'.'+(LV.filter((q,j)=>j<i&&q.m===l.m).length+1); });
+
+/* ---------- збереження ---------- */
+let SAVE={stars:{},best:{},rec:0,snd:true}; try{ const s=JSON.parse(localStorage.getItem('pz_elevator')||'{}'); if(s&&typeof s==='object'){ SAVE.stars=s.stars||{}; SAVE.best=s.best||{}; SAVE.rec=+s.rec||0; SAVE.snd=s.snd!==false; } }catch(e){}
+function save(){ try{ localStorage.setItem('pz_elevator',JSON.stringify(SAVE)); }catch(e){} }
+function unlocked(i){ return i===0||(SAVE.stars[i-1]||0)>0||(isLoc&&/all=1/.test(location.search)); }
+
+/* ---------- стан ---------- */
+const G={ph:'menu',mode:'lv',st:null,lv:null,sel:-1,anim:null,msg:'',msgT:0,hist:[],undo:3,vent:0,ventMode:false,t:0,shift:null,res:null};
+function say(m,t){ G.msg=m; G.msgT=t||2.4; }
+function loadLevel(i){ const l=LV[i]; G.mode='lv'; G.lv=l; G.st={K:l.K.map(k=>({t:k.t,cap:k.cap,crack:k.crack,L:k.L.map(a=>E.L(a[0],a[1],{w:a[2]&1,d:a[2]&2}))})),moves:0,lost:{},gas:0};
+  PT.length=0; G.sel=-1; G.anim=null; G.hist=[]; G.undo=3; G.vent=l.vent||0; G.ventMode=false; G.spoiled=0; G.ph='brief'; G.res=null; layout(); ui(); }
+
+/* ---------- зміна на елеваторі ---------- */
+const POOL=[['w3','ba'],['w3','ba','so'],['w3','ba','so','co'],['w3','w2','ba','co','su'],['w3','w2','ba','co','su','ra','so']];
+function startShift(){ G.mode='shift'; G.lv=null; const K=[]; const crack=Math.floor(Math.random()*6); for(let i=0;i<6;i++) K.push({t:'silo',cap:6,crack:i===crack,L:[]});
+  K.push({t:'dry',cap:2,L:[],busy:0}); K.push({t:'clean',cap:2,L:[],busy:0}); K.push({t:'waste',cap:99,L:[]});
+  for(let i=0;i<4;i++) K.push({t:'truck',cap:0,L:[],slot:i,empty:true}); for(let i=0;i<2;i++) K.push({t:'wagon',cap:0,L:[],slot:i,ord:null,wait:2+i*5});
+  PT.length=0; G.st={K:K,moves:0,lost:{},gas:0}; G.shift={t:0,money:0,hearts:3,nextTruck:1.5,trucks:0,wagons:0,rain:0,evT:40,stage:0,ventCd:0,log:[]}; G.sel=-1; G.anim=null; G.hist=[]; G.ventMode=false; G.ph='brief'; G.res=null; layout(); ui(); }
+function shiftCrops(){ const s=G.shift; return POOL[Math.min(POOL.length-1,Math.floor(s.t/75))]; }
+function shiftStep(dt){ const s=G.shift, st=G.st; s.t+=dt; if(s.ventCd>0) s.ventCd-=dt; if(s.rain>0) s.rain-=dt; if(s.dryFix>0){ s.dryFix-=dt; const d=st.K.find(k=>k.t==='dry'); d.broken=s.dryFix>0; }
+  for(const k of st.K){ if(k.busy>0){ k.busy-=dt; if(k.busy<=0){ k.busy=0; snd.beep(880,0,.08,'triangle',.08); } } }
+  /* машини */
+  s.nextTruck-=dt; if(s.nextTruck<=0){ const iv=Math.max(5.5,12-s.t/30); s.nextTruck=iv*(.8+Math.random()*.4); const slot=st.K.find(k=>k.t==='truck'&&k.empty);
+    if(!slot){ s.hearts--; say('Черга з машин! Один водій поїхав на інший елеватор — мінус ❤',3); snd.err(); const old=st.K.filter(k=>k.t==='truck').sort((a,b)=>a.born-b.born)[0]; fill(old); }
+    else fill(slot);
+    function fill(k){ const pool=shiftCrops(), c=pool[Math.floor(Math.random()*pool.length)], u=Math.random()<.35+s.t/600?2:1; const wet=(c==='co'?.75:.18)+(s.rain>0?.45:0), dirty=(c==='su'?.5:.15); const l=E.L(c,u,{w:Math.random()<wet,d:Math.random()<dirty}); l.t=u*E.UNIT*(.9+Math.random()*.2); k.L=[l]; k.cap=u; k.empty=false; k.born=s.t; k.hidden=s.t>60&&Math.random()<.25; k.lab=0; s.trucks++; } }
+  /* вагони */
+  for(const w of st.K.filter(k=>k.t==='wagon')){ if(!w.ord){ w.wait-=dt; if(w.wait<=0){ const inStock=[]; for(const k of st.K) if(k.t==='silo') for(const l of k.L) if(!E.needs(l)) inStock.push(l.c); const pool=shiftCrops(); const c=inStock.length&&Math.random()<.75?inStock[Math.floor(Math.random()*inStock.length)]:pool[Math.floor(Math.random()*pool.length)]; const u=2+Math.floor(Math.random()*Math.min(3,1+s.t/90)); w.ord={c:c,need:u,left:u,got:0,T:65+u*12,t:65+u*12}; w.cap=u; } }
+    else { w.ord.t-=dt; if(w.ord.left<=0){ const pay=Math.round(w.ord.got*CR[w.ord.c].p); s.money+=pay; s.wagons++; say('Вагон відправлено: +'+fmtM(pay),2.4); snd.win(); fx.coins(w); w.ord=null; w.wait=3+Math.random()*4; }
+      else if(w.ord.t<=0){ s.hearts--; say('Вагон пішов порожнім — мінус ❤',3); snd.err(); w.ord=null; w.wait=4; } } }
+  /* нагрів вологого */
+  const bad=E.heat(st,dt,32); if(bad.length){ s.hearts-=bad.length; say('Вологе зерно зігрілося й зіпсувалось — мінус ❤. Вивези його у відходи',3.4); snd.spoil(); }
+  /* лабораторія */
+  for(const k of st.K) if(k.t==='truck'&&k.lab>0){ k.lab-=dt; if(k.lab<=0){ k.hidden=false; say('Лабораторія: '+desc(k.L[0]),2.2); } }
+  /* події */
+  s.evT-=dt; if(s.evT<=0){ s.evT=35+Math.random()*25; const r=Math.random(); if(r<.35){ s.rain=30; say('Дощ: машини везуть вологе зерно',3); } else if(r<.6){ s.dryFix=15; say('Сушарка на ремонті 15 секунд',3); } else if(r<.85){ const w=st.K.find(k=>k.t==='wagon'&&k.ord&&k.ord.got===0); if(w){ const pool=shiftCrops(); w.ord.c=pool[Math.floor(Math.random()*pool.length)]; say('Покупець змінив замовлення: тепер '+CR[w.ord.c].n.toLowerCase(),3); } } else { s.rain=20; say('Знову дощ',2); } }
+  if(s.hearts<=0&&G.ph==='play') endShift(); }
+function endShift(){ const s=G.shift; G.ph='result'; G.res={shift:true,money:s.money,trucks:s.trucks,wagons:s.wagons,time:s.t}; if(s.money>SAVE.rec){ SAVE.rec=s.money; save(); G.res.rec=true; } snd.end(1); ui(); }
+function fmtM(v){ return '$'+String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+function desc(l){ return CR[l.c].n+(l.w?', волога':'')+(l.d?', засмічена':'')+(l.m?', з домішкою':''); }
+
+/* ---------- ходи ---------- */
+function tapK(i){ const st=G.st; if(!st||G.ph!=='play'||G.anim) return; const k=st.K[i];
+  if(G.ventMode){ G.ventMode=false; if(k.t!=='silo'){ say('Вентилювати можна лише силос',1.6); ui(); return; } let n=0; for(const l of k.L) if(l.w){ l.h=0; n++; } if(G.mode==='shift'){ G.shift.ventCd=15; } else G.vent--; say(n?'Силос провітрили: вологе зерно охололо':'Тут нічого гріти — вентиляцію витрачено',2); snd.vent(); fx.vent(i); ui(); return; }
+  if(G.sel<0){ if(!k.L.length||k.t==='waste'||k.t==='wagon'){ if(k.t==='wagon'&&k.ord) say('Вагон чекає: '+CR[k.ord.c].n+', '+k.ord.left*100+' т, сухе й чисте',2.2); return; }
+    if(k.t==='truck'&&k.hidden){ if(!(k.lab>0)){ k.lab=1.6; say('Машина без талона — беремо пробу…',1.8); snd.beep(500,0,.08,'square',.06); } return; }
+    G.sel=i; snd.beep(620,0,.05,'triangle',.08); return; }
+  if(G.sel===i){ G.sel=-1; return; }
+  const a=G.sel, w=E.why(st,a,i,{podmes:podmes()}); if(w){ if(w!=='same'&&w!=='none'){ say(w,2); snd.err(); } if(st.K[i].L.length&&st.K[i].t!=='waste'&&st.K[i].t!=='wagon'&&!(st.K[i].t==='truck')) G.sel=i; else G.sel=-1; return; }
+  G.sel=-1; const l=st.K[a].L[0]; G.anim={a:a,b:i,t:0,dur:.55/FF,col:CR[l.c].col}; snd.auger(); }
+function podmes(){ return G.mode==='lv'?!!(G.lv&&G.lv.podmes):G.shift&&G.shift.t>150; }
+function finishMove(){ const an=G.anim, st=G.st; G.anim=null; if(G.mode==='lv'){ G.hist.push(E.clone(st)); if(G.hist.length>30) G.hist.shift(); }
+  const A=st.K[an.a], B=st.K[an.b]; const out=E.move(st,an.a,an.b,{podmes:podmes(),timed:G.mode==='shift'?3:0});
+  if(A.t==='truck'&&!A.L.length){ A.empty=true; A.cap=0; }
+  if(out.some(p=>p.m)) say('Підмішування: останні 100 т вийшли з домішкою — їх у сепаратор',2.6);
+  if(B.t==='dry') { snd.dry(); fx.burst(an.b,'#FFB050'); } else if(B.t==='clean'){ snd.clean(); fx.burst(an.b,'#B0A080'); } else if(B.t==='waste') snd.beep(140,0,.2,'sawtooth',.08);
+  if(G.mode==='lv'){ if(G.lv.heat){ const bad=E.heat(st,1,G.lv.heat); if(bad.length){ G.spoiled+=bad.length; say('Вологе зерно перегрілося й зіпсувалось — тепер лише у відходи',3); snd.spoil(); } }
+    if(E.solved(st)){ setTimeout(winLevel,350); } }
+  ui(); }
+function doUndo(){ if(G.mode!=='lv'||!G.hist.length||G.undo<=0||G.anim) return; G.st=G.hist.pop(); G.undo--; G.sel=-1; snd.beep(400,0,.08,'triangle',.06); ui(); }
+function winLevel(){ if(G.ph!=='play') return; const l=G.lv, mv=G.st.moves; let st=1; if(mv<=Math.ceil(l.opt*1.5)+1) st=2; if(mv<=l.opt+1) st=3; if(G.spoiled) st=Math.min(st,1);
+  const lost=Object.values(G.st.lost).reduce((a,b)=>a+b,0); G.res={st:st,moves:mv,opt:l.opt,lost:G.st.lost,gas:G.st.gas,spoiled:G.spoiled};
+  if(st>(SAVE.stars[l.id]||0)) SAVE.stars[l.id]=st; if(!SAVE.best[l.id]||mv<SAVE.best[l.id]) SAVE.best[l.id]=mv; save(); G.ph='result'; snd.end(st); fx.confetti(); ui(); }
+
+/* ---------- розміщення ---------- */
+const cv=$('c'), cx=cv.getContext('2d'); let CW=1, CH=1, DPR=1; let R=[]; let UH=20;
+function resize(){ const r=cv.getBoundingClientRect(); DPR=Math.min(window.devicePixelRatio||1,2); CW=Math.max(1,r.width); CH=Math.max(1,r.height); cv.width=Math.round(CW*DPR); cv.height=Math.round(CH*DPR); layout(); }
+function hudH(){ return Math.round(clamp(CH*.11,54,78)); }
+function layout(){ const st=G.st; if(!st) return; R=[]; const K=st.K, hud=hudH(), pad=10;
+  const silos=K.map((k,i)=>i).filter(i=>K[i].t==='silo'), stations=K.map((k,i)=>i).filter(i=>['dry','clean','waste'].includes(K[i].t)), trucks=K.map((k,i)=>i).filter(i=>K[i].t==='truck'), wagons=K.map((k,i)=>i).filter(i=>K[i].t==='wagon');
+  const shift=G.mode==='shift', port=CH>CW*1.1; const vrows=shift&&port?2:1; const botH=shift?Math.min(CH*(vrows===2?.27:.2),vrows===2?200:120):0; const topH=stations.length?Math.min(CH*.15,96):0;
+  const maxCap=Math.max(...silos.map(i=>K[i].cap)); const n=silos.length; const gap=Math.max(6,CW*.018); const sw=Math.min(150,(CW-2*pad-26-gap*(n-1))/n);
+  const avail=CH-hud-topH-botH-62; UH=Math.max(10,Math.min(avail/(maxCap+.9),sw*.8)); const used=UH*(maxCap+.9); const oy=shift?0:Math.max(0,(avail-used)*.45);
+  const total=n*sw+(n-1)*gap, x0=(CW-26-total)/2; const baseY=hud+oy+topH+20+UH*(maxCap+.6)+12;
+  silos.forEach((i,j)=>{ const k=K[i]; R[i]={x:x0+j*(sw+gap),y:baseY-UH*k.cap,w:sw,h:UH*k.cap,base:baseY}; });
+  const sn=stations.length; if(sn){ const ssw=Math.min(130,(CW-2*pad-gap*(sn-1))/Math.max(sn,3)); const sh=topH-16, stot=sn*ssw+(sn-1)*gap, sx0=(CW-26-stot)/2; stations.forEach((i,j)=>{ R[i]={x:sx0+j*(ssw+gap),y:hud+oy+6,w:ssw,h:sh,base:hud+oy+6+sh,st:true}; }); }
+  if(shift){ const y=baseY+30, rowH=(botH-24-(vrows-1)*8)/vrows; const rows=vrows===2?[trucks,wagons]:[trucks.concat(wagons)];
+    rows.forEach((row,ri)=>{ const m=row.length, extra=vrows===1?14:0, bw=Math.min(130,(CW-2*pad-gap*(m-1)-extra)/m); const tot=m*bw+(m-1)*gap+extra; let x=(CW-tot)/2; const yy=y+ri*(rowH+8);
+      row.forEach(i=>{ if(vrows===1&&K[i].t==='wagon'&&K[row[ri?0:0]]&&i===wagons[0]) x+=extra; R[i]={x:x,y:yy,w:bw,h:rowH,base:yy+rowH,veh:K[i].t}; x+=bw+gap; }); }); }
+  G.beltY=baseY+10; G.noriaX=CW-18; G.topBeltY=hud+oy+topH+8; }
+function hitK(x,y){ for(let i=0;i<R.length;i++){ const r=R[i]; if(!r) continue; const top=r.st||r.veh?r.y:r.y-UH*.7; if(x>=r.x-4&&x<=r.x+r.w+4&&y>=top-6&&y<=r.base+8) return i; } return -1; }
+
+/* ---------- ефекти ---------- */
+const PT=[]; const fx={ add(x,y,vx,vy,L,s,col,g){ if(PT.length>600) PT.shift(); PT.push({x:x,y:y,vx:vx,vy:vy,l:L,L:L,s:s,col:col,g:g||0}); },
+ burst(i,col){ const r=R[i]; if(!r) return; for(let k=0;k<18;k++) this.add(r.x+r.w/2,r.y+r.h*.4,(Math.random()-.5)*160,-Math.random()*140,.7,2+Math.random()*2.5,col,260); },
+ vent(i){ const r=R[i]; for(let k=0;k<26;k++) this.add(r.x+Math.random()*r.w,r.base-Math.random()*r.h,(Math.random()-.5)*30,-40-Math.random()*60,1.2,3,'rgba(190,230,255,.8)',-10); },
+ coins(k){ const i=G.st.K.indexOf(k), r=R[i]; if(!r) return; for(let q=0;q<22;q++) this.add(r.x+r.w/2,r.y,(Math.random()-.5)*200,-80-Math.random()*160,1.1,3,'#F2C94C',300); },
+ confetti(){ for(let q=0;q<120;q++) this.add(Math.random()*CW,-10,(Math.random()-.5)*80,60+Math.random()*140,2.4,3+Math.random()*3,['#E2B84A','#F0A030','#7FD18A','#5DA9E9','#E86A5A'][q%5],60); },
+ step(dt){ for(let i=PT.length-1;i>=0;i--){ const p=PT[i]; p.l-=dt; if(p.l<=0){ PT.splice(i,1); continue; } p.vy+=p.g*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; } } };
+
+/* ---------- малювання ---------- */
+function rr(x,y,w,h,r){ cx.beginPath(); cx.moveTo(x+r,y); cx.arcTo(x+w,y,x+w,y+h,r); cx.arcTo(x+w,y+h,x,y+h,r); cx.arcTo(x,y+h,x,y,r); cx.arcTo(x,y,x+w,y,r); cx.closePath(); }
+function txt(t,x,y,sz,col,al,wt,base){ cx.font=(wt||700)+' '+sz+'px Manrope,system-ui,sans-serif'; cx.textAlign=al||'left'; cx.textBaseline=base||'top'; cx.fillStyle=col||'#fff'; cx.fillText(t,x,y); }
+const grainPat={}; function pattern(c){ if(grainPat[c]) return grainPat[c]; const cr=CR[c], q=document.createElement('canvas'); q.width=q.height=24; const g=q.getContext('2d'); g.fillStyle=cr.col; g.fillRect(0,0,24,24); g.fillStyle=cr.dk; for(let i=0;i<18;i++){ const x=(i*37)%24, y=(i*53)%24; if(c==='co') { g.beginPath(); g.arc(x,y,1.9,0,7); g.fill(); } else if(c==='su'){ g.fillStyle=i%2?'#8D8D94':'#1E1E22'; g.beginPath(); g.ellipse(x,y,1.2,2.4,i,0,7); g.fill(); } else if(c==='ra'||c==='sp'){ g.beginPath(); g.arc(x,y,1,0,7); g.fill(); } else { g.beginPath(); g.ellipse(x,y,1.1,2,i*.7,0,7); g.fill(); } } grainPat[c]=cx.createPattern(q,'repeat'); return grainPat[c]; }
+function drawLayer(l,x,y,w,h,flowTop){ cx.save(); cx.fillStyle=pattern(l.c); cx.translate(x,y); cx.fillRect(0,0,w,h); cx.restore();
+  if(l.d){ const dk=l.c==='su'||l.c==='ra'; cx.strokeStyle=dk?'#D8C48E':'#5A3D1E'; cx.lineWidth=2; cx.beginPath(); for(let i=0;i<w*h/110;i++){ const px=x+((i*61.7)%w), py=y+2+((i*29.3)%Math.max(1,h-4)), a=i*1.7; cx.moveTo(px,py); cx.lineTo(px+Math.cos(a)*5,py+Math.sin(a)*5); } cx.stroke(); }
+  if(l.m){ cx.save(); cx.beginPath(); cx.rect(x,y,w,h); cx.clip(); cx.strokeStyle='rgba(255,255,255,.55)'; cx.lineWidth=2; for(let s=-h;s<w;s+=9){ cx.beginPath(); cx.moveTo(x+s,y+h); cx.lineTo(x+s+h,y); cx.stroke(); } cx.restore(); }
+  if(l.w){ const n=Math.max(1,Math.round(w/30)), rows=Math.max(1,Math.floor(h/34)); for(let r2=0;r2<rows;r2++) for(let i=0;i<n;i++){ const px=x+(i+.5+(r2%2)*.5)*w/n, py=y+(r2+.5)*h/rows+(rows===1?-h*.22:0); if(px>x+w-4) continue; cx.fillStyle='rgba(40,120,220,.95)'; cx.beginPath(); cx.moveTo(px,py-8); cx.quadraticCurveTo(px+7,py+3,px,py+7); cx.quadraticCurveTo(px-7,py+3,px,py-8); cx.fill(); cx.fillStyle='rgba(255,255,255,.7)'; cx.beginPath(); cx.arc(px-2,py+2,1.6,0,7); cx.fill(); } }
+  if(l.c==='sp'){ cx.fillStyle='rgba(40,30,15,.35)'; cx.fillRect(x,y,w,h); }
+  cx.strokeStyle='rgba(0,0,0,.25)'; cx.lineWidth=1; cx.beginPath(); cx.moveTo(x,y); cx.lineTo(x+w,y); cx.stroke();
+  if(h>15){ const sz=clamp(Math.round(Math.min(h*.36,w*.17)),9,14); const st2=(l.w?' · волога':'')+(l.d?' · смітт.':'')+(l.m?' · домішка':''); const lab=CR[l.c].s+' · '+Math.round(l.t)+' т'+st2; cx.font='800 '+sz+'px Manrope,system-ui,sans-serif'; const tw=cx.measureText(lab).width; if(tw<w-6){ cx.fillStyle='rgba(255,255,255,.82)'; rr(x+w/2-tw/2-4,y+h/2-sz*.62,tw+8,sz*1.25,4); cx.fill(); txt(lab,x+w/2,y+h/2,sz,'#20262A','center',800,'middle'); } else { cx.fillStyle='rgba(255,255,255,.82)'; const t2=CR[l.c].s+(l.w?' вол':'')+(l.d?' смт':'')+(l.m?' дом':''); const w2=cx.measureText(t2).width; rr(x+w/2-w2/2-3,y+h/2-sz*.62,w2+6,sz*1.25,4); cx.fill(); txt(t2,x+w/2,y+h/2,sz,'#20262A','center',800,'middle'); } } }
+function drawSilo(i,k,r){ const sel=G.sel===i, x=r.x, w=r.w, base=r.base, top=r.y; const roof=UH*.6;
+  /* опори й випуск */
+  cx.fillStyle='#7E8A90'; cx.fillRect(x+w*.08,base,w*.08,10); cx.fillRect(x+w*.84,base,w*.08,10); cx.fillStyle='#5D686E'; cx.fillRect(x+w/2-6,base,12,12);
+  /* корпус */
+  const g=cx.createLinearGradient(x,0,x+w,0); g.addColorStop(0,'#AEB8BE'); g.addColorStop(.35,'#E4EAED'); g.addColorStop(1,'#9AA5AB'); cx.fillStyle=g; cx.fillRect(x,top,w,base-top);
+  cx.fillStyle='#C4CDD2'; cx.beginPath(); cx.moveTo(x-3,top); cx.lineTo(x+w/2,top-roof); cx.lineTo(x+w+3,top); cx.closePath(); cx.fill(); cx.strokeStyle='#8D989E'; cx.lineWidth=1.5; cx.stroke();
+  /* розріз — внутрішність */
+  const ix=x+5, iw=w-10; cx.fillStyle='#3B464B'; cx.fillRect(ix,top+3,iw,base-top-3);
+  let y=base; k.L.forEach((l,li)=>{ const h=l.u*UH; drawLayer(l,ix,y-h,iw,h); y-=h; });
+  for(let u=1;u<k.cap;u++){ cx.strokeStyle='rgba(255,255,255,.07)'; cx.beginPath(); cx.moveTo(ix,base-u*UH); cx.lineTo(ix+iw,base-u*UH); cx.stroke(); }
+  /* гофра */
+  cx.strokeStyle='rgba(80,95,102,.35)'; cx.lineWidth=1; for(let yy=top+6;yy<base;yy+=6){ cx.beginPath(); cx.moveTo(x,yy); cx.lineTo(x+5,yy); cx.moveTo(x+w-5,yy); cx.lineTo(x+w,yy); cx.stroke(); }
+  if(k.crack){ cx.strokeStyle='#C0392B'; cx.lineWidth=2.5; cx.beginPath(); cx.moveTo(x+w-3,top+(base-top)*.3); cx.lineTo(x+w-9,top+(base-top)*.42); cx.lineTo(x+w-4,top+(base-top)*.52); cx.lineTo(x+w-10,top+(base-top)*.66); cx.stroke(); txt('тріщина',x+w/2,base+14,10,'#C0392B','center',800); }
+  /* термометр */
+  const heatL=G.mode==='lv'?(G.lv&&G.lv.heat):32; const hot=k.L.filter(l=>l.w).reduce((a,l)=>Math.max(a,l.h),0); if(heatL&&k.L.some(l=>l.w)){ const f=clamp(hot/heatL,0,1), tx=x+w-8, th=Math.min(60,base-top-10); cx.fillStyle='rgba(255,255,255,.85)'; rr(tx-4,top+6,8,th,4); cx.fill(); cx.fillStyle=f>.7?'#E0402A':f>.4?'#F2A33A':'#5DA9E9'; cx.fillRect(tx-2,top+6+th*(1-f),4,th*f); cx.beginPath(); cx.arc(tx,top+8+th,5,0,7); cx.fill(); if(f>.7&&Math.sin(G.t*10)>0){ cx.strokeStyle='#E0402A'; cx.lineWidth=2; cx.strokeRect(x-2,top-2,w+4,base-top+4); } }
+  if(sel){ cx.strokeStyle='#FFD34D'; cx.lineWidth=3; cx.strokeRect(x-3,top-roof-3,w+6,base-top+roof+16); const l=k.L[0]; if(l){ cx.fillStyle='rgba(255,211,77,'+(.25+.2*Math.sin(G.t*8))+')'; cx.fillRect(ix,base-l.u*UH,iw,l.u*UH); } txt('▼ знизу',x+w/2,base+14,10,'#FFD34D','center',800); }
+  if(G.ventMode){ cx.strokeStyle='rgba(150,210,255,.9)'; cx.setLineDash([5,4]); cx.lineWidth=2; cx.strokeRect(x-3,top-roof-3,w+6,base-top+roof+16); cx.setLineDash([]); }
+  txt(Math.round(E.used(k)*100)+'/'+k.cap*100+' т',x+w/2,top-roof-16,10,'#33424A','center',700); }
+function drawStation(i,k,r){ const sel=G.sel===i, x=r.x, y=r.y, w=r.w, h=r.h; const col=k.t==='dry'?'#C76B3A':k.t==='clean'?'#4F7F8F':'#6E5A44';
+  cx.fillStyle=col; rr(x,y,w,h,8); cx.fill(); cx.fillStyle='rgba(255,255,255,.12)'; rr(x+4,y+4,w-8,h*.32,6); cx.fill();
+  txt(k.t==='dry'?'Сушарка':k.t==='clean'?'Сепаратор':'Відходи',x+w/2,y+6,clamp(Math.round(w/8),10,13),'#fff','center',800);
+  if(k.t==='dry'){ const f=k.busy>0||k.L.length; for(let q=0;q<3;q++){ const fx2=x+w*(.3+.2*q), fy=y+h-10; cx.fillStyle=f?'rgba(255,170,60,'+(.6+.4*Math.sin(G.t*12+q))+')':'rgba(255,255,255,.25)'; cx.beginPath(); cx.moveTo(fx2,fy); cx.quadraticCurveTo(fx2+5,fy-8,fx2,fy-14); cx.quadraticCurveTo(fx2-5,fy-8,fx2,fy); cx.fill(); } if(k.broken){ txt('ремонт',x+w/2,y+h/2,12,'#FFD34D','center',800,'middle'); } }
+  if(k.t==='clean'){ cx.strokeStyle='rgba(255,255,255,.4)'; cx.lineWidth=1; for(let q=0;q<5;q++){ cx.beginPath(); cx.moveTo(x+8,y+h-8-q*3); cx.lineTo(x+w-8,y+h-12-q*3); cx.stroke(); } }
+  if(k.t==='waste'){ const t=k.L.reduce((a,l)=>a+l.t,0); if(G.st.lost.spoil) txt(Math.round(G.st.lost.spoil)+' т',x+w/2,y+h*.55,12,'#F2D0B0','center',800); }
+  else { const ix=x+8, iw=w-16, bh=h*.42, by=y+h*.42; cx.fillStyle='rgba(0,0,0,.35)'; cx.fillRect(ix,by,iw,bh); let yy=by+bh; const uh=bh/k.cap; for(const l of k.L){ const hh=l.u*uh; drawLayer(l,ix,yy-hh,iw,hh); yy-=hh; } if(k.busy>0){ cx.fillStyle='rgba(255,255,255,.8)'; cx.fillRect(ix,by-6,iw*(1-k.busy/3),3); } }
+  if(sel){ cx.strokeStyle='#FFD34D'; cx.lineWidth=3; rr(x-2,y-2,w+4,h+4,9); cx.stroke(); } }
+function drawVehicle(i,k,r){ const sel=G.sel===i, x=r.x, y=r.y, w=r.w, h=r.h, wy=y+h-8;
+  if(!(r.veh==='truck'&&k.empty)){ cx.fillStyle='#2A2F33'; cx.beginPath(); cx.arc(x+w*.22,wy,7,0,7); cx.arc(x+w*.78,wy,7,0,7); cx.fill(); }
+  if(r.veh==='truck'){ if(k.empty){ txt('чекаємо машину',x+w/2,y+h*.45,10,'#56656C','center',700,'middle'); return; } cx.fillStyle='#4C7A8C'; rr(x+w*.72,y+h*.2,w*.28,h*.55,5); cx.fill(); cx.fillStyle='#BFE3F2'; cx.fillRect(x+w*.78,y+h*.27,w*.15,h*.18); cx.fillStyle='#8E6F4B'; cx.fillRect(x,y+h*.2,w*.7,h*.55);
+    const l=k.L[0]; if(l){ if(k.hidden){ cx.fillStyle='#9A9488'; cx.fillRect(x+3,y+h*.24,w*.7-6,h*.47); txt(k.lab>0?'проба…':'? без талона',x+w*.35,y+h*.46,10,'#fff','center',800,'middle'); } else drawLayer(l,x+3,y+h*.24,w*.7-6,h*.47); }
+    const wait=G.shift?G.shift.t-k.born:0; if(wait>20){ cx.fillStyle=wait>35?'#E0402A':'#F2A33A'; txt('⏱ '+Math.round(wait)+' с',x+w*.35,y+2,10,cx.fillStyle,'center',800); } }
+  else { cx.fillStyle='#6E5240'; rr(x,y+h*.16,w,h*.6,4); cx.fill(); const o=k.ord; if(!o){ txt('вагон подають…',x+w/2,y+h*.46,10,'#F2E6D8','center',700,'middle'); }
+    else { const f=1-o.left/o.need; cx.fillStyle=CR[o.c].col; cx.fillRect(x+4,y+h*.2+h*.52*(1-f),w-8,h*.52*f); txt(CR[o.c].s+' · '+o.need*100+' т',x+w/2,y+h*.2,11,'#fff','center',800); txt('сухе й чисте',x+w/2,y+h*.2+13,9,'#F2E6D8','center',700); const tf=o.t/o.T; cx.fillStyle='rgba(0,0,0,.35)'; cx.fillRect(x+4,y+h*.8,w-8,4); cx.fillStyle=tf<.3?'#E0402A':'#7FD18A'; cx.fillRect(x+4,y+h*.8,(w-8)*tf,4); } }
+  if(sel){ cx.strokeStyle='#FFD34D'; cx.lineWidth=3; rr(x-2,y-2,w+4,h+4,7); cx.stroke(); } }
+function pathPts(a,b){ const ra=R[a], rb=R[b]; const sx=ra.x+ra.w/2, sy=ra.base+6, tx=rb.x+rb.w/2, ty=rb.st||rb.veh?rb.y:rb.y-UH*.6; const by=Math.max(G.beltY,ra.veh?ra.base+4:0), nx=G.noriaX, top=Math.min(G.topBeltY,ty-10);
+  return [[sx,sy],[sx,by],[nx,by],[nx,top],[tx,top],[tx,ty]]; }
+function along(P,f){ let L=0; const seg=[]; for(let i=1;i<P.length;i++){ const d=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]); seg.push(d); L+=d; } let d=f*L; for(let i=0;i<seg.length;i++){ if(d<=seg[i]){ const k=seg[i]?d/seg[i]:0; return [P[i][0]+(P[i+1][0]-P[i][0])*k,P[i][1]+(P[i+1][1]-P[i][1])*k]; } d-=seg[i]; } return P[P.length-1]; }
+function drawPlant(){ /* транспортери й норія */ if(!G.st) return; cx.strokeStyle='#5D686E'; cx.lineWidth=4; cx.beginPath(); cx.moveTo(12,G.beltY); cx.lineTo(G.noriaX,G.beltY); cx.stroke(); cx.fillStyle='#8D989E'; cx.fillRect(G.noriaX-7,G.topBeltY-6,14,G.beltY-G.topBeltY+10); cx.strokeStyle='#5D686E'; cx.lineWidth=3; cx.beginPath(); cx.moveTo(G.noriaX,G.topBeltY); cx.lineTo(24,G.topBeltY); cx.stroke();
+  for(let y=G.topBeltY;y<G.beltY;y+=8){ cx.fillStyle='rgba(60,70,75,.5)'; cx.fillRect(G.noriaX-5,y+((G.t*40)%8),10,2); }
+  txt('норія',G.noriaX-10,G.topBeltY+4,9,'#56656C','right',700); }
+function drawAnim(){ const an=G.anim; if(!an) return; const P=pathPts(an.a,an.b), f=an.t/an.dur; for(let q=0;q<40;q++){ const u=f*1.25-q*.03; if(u<0||u>1) continue; const p=along(P,u); cx.fillStyle=an.col; cx.beginPath(); cx.arc(p[0]+(Math.random()-.5)*3,p[1]+(Math.random()-.5)*3,2.6,0,7); cx.fill(); } }
+function drawHud(){ const hud=hudH(), sz=clamp(Math.round(Math.min(CW,CH*1.4)/44),11,16), st=G.st; cx.fillStyle='rgba(14,26,31,.62)'; rr(8,6,CW-16,hud-12,10); cx.fill();
+  if(G.mode==='lv'){ const l=G.lv; txt(MONTHS[l.m]+' · '+l.k+' · '+l.n,18,12,sz,'#fff','left',800); txt('Ходи: '+st.moves+'  ·  можна за '+l.opt+(G.undo<3||G.hist.length?'  ·  назад: '+G.undo:'')+(l.vent?'  ·  вентиляцій: '+G.vent:''),18,12+sz*1.45,sz*.82,'#D6E3E8');
+    const lost=(st.lost.dry||0)+(st.lost.clean||0)+(st.lost.spoil||0); if(lost) txt('Втрати: '+Math.round(lost)+' т',18,12+sz*2.7,sz*.78,'#FFB4A2'); }
+  else { const s=G.shift; txt('Зміна · '+Math.floor(s.t/60)+':'+String(Math.floor(s.t%60)).padStart(2,'0')+'   '+fmtM(s.money),18,12,sz,'#fff','left',800); txt('❤'.repeat(Math.max(0,s.hearts))+'   машин '+s.trucks+' · вагонів '+s.wagons+(s.rain>0?' · дощ':'')+(s.ventCd>0?' · вентиляція через '+Math.ceil(s.ventCd)+' с':''),18,12+sz*1.45,sz*.82,'#D6E3E8'); txt('Рекорд: '+fmtM(SAVE.rec),18,12+sz*2.7,sz*.78,'#FFE7A8'); }
+  if(G.ventMode) txt('Торкнись силосу, який провітрити',CW/2,hud+2,sz*.9,'#9FD0FF','center',800);
+  if(G.msgT>0){ cx.globalAlpha=Math.min(1,G.msgT*2); const fs=clamp(Math.round(sz*1.05),12,19); cx.font='800 '+fs+'px Manrope,system-ui,sans-serif'; const lines=wrap(G.msg,CW-60); const w=Math.min(CW-20,Math.max(...lines.map(s=>cx.measureText(s).width))+28); const gy=G.beltY+16, bh=fs*1.4*lines.length+14, y0=(G.mode==='lv'&&CH-gy>bh+16)?gy+(CH-gy-bh)/2:Math.max(6,(hudH()-bh)/2); cx.fillStyle='rgba(14,26,31,.82)'; rr(CW/2-w/2,y0,w,fs*1.4*lines.length+14,12); cx.fill(); lines.forEach((s,i)=>txt(s,CW/2,y0+8+i*fs*1.4,fs,'#FFE7A8','center',800)); cx.globalAlpha=1; } }
+function wrap(s,maxW){ const words=s.split(' '), out=[]; let cur=''; for(const w of words){ const t=cur?cur+' '+w:w; if(cx.measureText(t).width>maxW&&cur){ out.push(cur); cur=w; } else cur=t; } if(cur) out.push(cur); return out; }
+function render(){ cx.setTransform(DPR,0,0,DPR,0,0); const g=cx.createLinearGradient(0,0,0,CH); const rain=G.shift&&G.shift.rain>0; g.addColorStop(0,rain?'#9AA8B0':'#A8D4EE'); g.addColorStop(1,rain?'#D0D6D9':'#E8F2F2'); cx.fillStyle=g; cx.fillRect(0,0,CW,CH);
+  if(!G.st){ drawMenuBg(); return; }
+  cx.fillStyle='#C9CFAE'; cx.fillRect(0,G.beltY+4,CW,CH); cx.fillStyle='#B4BB94'; cx.fillRect(0,G.beltY+4,CW,6);
+  drawPlant(); const K=G.st.K; for(let i=0;i<K.length;i++){ const r=R[i]; if(!r) continue; const k=K[i]; if(k.t==='silo') drawSilo(i,k,r); else if(r.st) drawStation(i,k,r); else drawVehicle(i,k,r); }
+  drawAnim(); for(const p of PT){ cx.globalAlpha=Math.min(1,p.l/p.L*1.5); cx.fillStyle=p.col; cx.fillRect(p.x,p.y,p.s,p.s); } cx.globalAlpha=1;
+  if(rain){ cx.strokeStyle='rgba(220,230,240,.5)'; cx.lineWidth=1; cx.beginPath(); for(let i=0;i<70;i++){ const x=((i*137+G.t*50)%CW+CW)%CW, y=((i*91+G.t*600)%CH+CH)%CH; cx.moveTo(x,y); cx.lineTo(x-3,y+12); } cx.stroke(); }
+  drawHud(); }
+let mt=0; function drawMenuBg(){ mt+=1/60; const n=5, w=Math.min(90,CW/8), base=CH*.86; for(let i=0;i<n;i++){ const x=CW/2+(i-(n-1)/2)*(w+12)-w/2, h=CH*.42; const g=cx.createLinearGradient(x,0,x+w,0); g.addColorStop(0,'#AEB8BE'); g.addColorStop(.35,'#E4EAED'); g.addColorStop(1,'#9AA5AB'); cx.fillStyle=g; cx.fillRect(x,base-h,w,h); cx.fillStyle='#C4CDD2'; cx.beginPath(); cx.moveTo(x-3,base-h); cx.lineTo(x+w/2,base-h-w*.4); cx.lineTo(x+w+3,base-h); cx.fill(); const c=['w3','co','su','ba','w2'][i]; cx.fillStyle=CR[c].col; const f=.5+.3*Math.sin(mt*.7+i); cx.fillRect(x+5,base-h*f,w-10,h*f); } cx.fillStyle='#C9CFAE'; cx.fillRect(0,base,CW,CH); }
+
+/* ---------- цикл ---------- */
+let last=0;
+function frame(ts){ const dt=Math.min(.1,(ts-last)/1000||0); last=ts; G.t+=dt;
+  if(G.ph==='play'){ const d=dt*FF; if(G.anim){ G.anim.t+=d; if(G.anim.t>=G.anim.dur) finishMove(); } if(G.mode==='shift') shiftStep(d); if(G.msgT>0) G.msgT-=dt; }
+  fx.step(dt); render(); snd.frame(); requestAnimationFrame(frame); }
+
+/* ---------- інтерфейс ---------- */
+const ov=$('ov'), card=$('card');
+function starsHtml(n){ return '<div class="stars">'+[0,1,2].map(i=>'<span class="'+(i<n?'':'off')+'">★</span>').join('')+'</div>'; }
+function play(){ G.ph='play'; ui(); setTimeout(resize,40); }
+function ui(){ const playing=G.ph==='play'; document.body.classList.toggle('play',!(G.ph==='menu'||G.ph==='levels')); ov.hidden=playing; $('ctl').hidden=!playing; $('bTop').hidden=true;
+  const lv=G.mode==='lv'; $('bUndo').hidden=!lv; $('bRe').hidden=!lv; $('bVent').hidden=lv?!(G.lv&&G.lv.vent):false; if(lv) $('bUndo').disabled=G.undo<=0||!G.hist.length; $('bVent').disabled=lv?G.vent<=0:(G.shift&&G.shift.ventCd>0); $('bVent').classList.toggle('main',G.ventMode);
+  setTimeout(resize,30); if(playing) return;
+  if(G.ph==='menu'){ const tot=Object.values(SAVE.stars).reduce((a,b)=>a+b,0);
+    card.innerHTML='<span class="k">Головоломка · версія '+VER+'</span><h3>Елеватор</h3><p>Розклади зерно по силосах: у кожному — одна культура, суха й чиста. Зерно виходить знизу силосу, а засипається згори.</p><div class="modes"><button id="mLv"><b>Головоломки</b><span>Сезон від липня до грудня: '+LV.length+' задач. Зірок: '+tot+' з '+LV.length*3+'</span></button><button id="mRun"><b>Зміна на елеваторі</b><span>Машини везуть зерно, вагони чекають замовлення. Три помилки — кінець зміни. Рекорд: '+fmtM(SAVE.rec)+'</span></button></div>';
+    $('mLv').onclick=()=>{ audioInit(); G.ph='levels'; ui(); }; $('mRun').onclick=()=>{ audioInit(); startShift(); }; }
+  else if(G.ph==='levels'){ let h='<span class="k">Головоломки</span><h3>Сезон</h3><div class="months">'; for(let m=0;m<6;m++){ h+='<div class="month"><b>'+MONTHS[m]+'</b><div class="lv">'; LV.filter(l=>l.m===m).forEach(l=>{ const s=SAVE.stars[l.id]||0; h+='<button data-lv="'+l.id+'" class="'+(l.boss?'boss':'')+'"'+(unlocked(l.id)?'':' disabled')+'><span>'+l.k+'</span><small>'+l.n+'</small><i>'+'★'.repeat(s)+'<span style="opacity:.3">'+'★'.repeat(3-s)+'</span></i></button>'; }); h+='</div></div>'; }
+    h+='</div><div class="btns"><button class="sec" id="lBack">Назад</button></div>'; card.innerHTML=h; card.querySelectorAll('button[data-lv]').forEach(b=>b.onclick=()=>{ audioInit(); loadLevel(+b.dataset.lv); }); $('lBack').onclick=()=>{ G.ph='menu'; G.st=null; ui(); }; }
+  else if(G.ph==='brief'){ if(G.mode==='lv'){ const l=G.lv, facts=[]; const nS=l.K.filter(k=>k.t==='silo').length; facts.push(nS+' силоси'); if(l.K.some(k=>k.t==='dry')) facts.push('сушарка'); if(l.K.some(k=>k.t==='clean')) facts.push('сепаратор'); if(l.heat) facts.push('нагрів: '+l.heat+' ходів'); if(l.vent) facts.push('вентиляцій: '+l.vent); if(l.podmes) facts.push('підмішування'); facts.push((l.exact===false?'ми впоралися за ':'найкраще — за ')+l.opt+' ходів');
+      card.innerHTML='<span class="k">'+MONTHS[l.m]+' · задача '+l.k+'</span><h3>'+l.n+'</h3><div class="new">'+l.intro+'</div><div class="facts">'+facts.map(f=>'<span>'+f+'</span>').join('')+'</div><p>Три зірки — якщо вкладешся майже в найкраще число ходів і нічого не зіпсуєш.</p><div class="btns"><button id="bStart">Почати</button><button class="sec" id="bBack">До задач</button></div>'; }
+    else card.innerHTML='<span class="k">Зміна на елеваторі</span><h3>Починаємо зміну</h3><div class="new">Машини стають у чергу внизу ліворуч: торкнись машини, потім силосу, сушарки чи сепаратора. Вагони праворуч чекають замовлення: торкнись силосу, з дна якого піде потрібне зерно, потім вагона. У вагон — лише сухе й чисте. Вологе в силосі гріється: висуш або провітри. Мінус ❤ — черга переповнена, вагон пішов порожнім або зерно зіпсувалось.</div><div class="btns"><button id="bStart">Почати зміну</button><button class="sec" id="bBack">У меню</button></div>';
+    $('bStart').onclick=()=>{ audioInit(); if(coarse) tryFs(); play(); if(G.mode==='lv'&&G.lv.id===0) say('Торкнись силосу, з якого брати',3); }; $('bBack').onclick=()=>{ G.st=null; G.ph=G.mode==='lv'?'levels':'menu'; ui(); }; }
+  else if(G.ph==='result'){ const r=G.res; if(r.shift){ card.innerHTML='<span class="k">Зміна завершена</span><h3>'+fmtM(r.money)+'</h3><div class="rows"><span>Тривалість</span><b>'+Math.floor(r.time/60)+' хв '+Math.floor(r.time%60)+' с</b><span>Прийнято машин</span><b>'+r.trucks+'</b><span>Відправлено вагонів</span><b>'+r.wagons+'</b><span>Рекорд</span><b>'+fmtM(SAVE.rec)+(r.rec?' — новий!':'')+'</b></div><div class="btns"><button id="rAgain">Ще зміна</button><button class="sec" id="rMenu">У меню</button></div>'; }
+    else { const l=G.lv, nx=LV[l.id+1], ls=r.lost; const rows=[['Ходи',r.moves+(l.exact===false?' (наш розв\'язок — '+r.opt+')':' (найкраще можливе — '+r.opt+')'),r.moves<=r.opt+1?'ok':''],['Усушка в сушарці',Math.round(ls.dry||0)+' т',''],['Відходи сепаратора',Math.round(ls.clean||0)+' т',''],['Зіпсовано',Math.round(ls.spoil||0)+' т',r.spoiled?'bad':'ok']];
+      card.innerHTML='<span class="k">'+MONTHS[l.m]+' · задача '+l.k+'</span><h3>'+(r.st===3?'Чудово!':'Розклали!')+'</h3>'+starsHtml(r.st)+'<div class="rows">'+rows.map(x=>'<span>'+x[0]+'</span><b class="'+x[2]+'">'+x[1]+'</b>').join('')+'</div><div class="btns">'+(nx?'<button id="rNext">Далі: '+nx.n+'</button>':'')+'<button class="'+(nx?'sec':'')+'" id="rAgain">Ще раз</button><button class="sec" id="rLv">Задачі</button></div>'; }
+    if($('rNext')) $('rNext').onclick=()=>loadLevel(G.lv.id+1); $('rAgain').onclick=()=>{ if(G.mode==='lv') loadLevel(G.lv.id); else startShift(); }; if($('rLv')) $('rLv').onclick=()=>{ G.st=null; G.ph='levels'; ui(); }; if($('rMenu')) $('rMenu').onclick=()=>{ G.st=null; G.ph='menu'; ui(); }; }
+  else if(G.ph==='pause'){ card.innerHTML='<h3>Пауза</h3><div class="btns"><button id="pGo">Далі</button>'+(G.mode==='lv'?'<button class="sec" id="pRe">Почати заново</button>':'')+'<button class="sec" id="pOut">Вийти</button></div>'; $('pGo').onclick=()=>{ G.ph='play'; ui(); }; if($('pRe')) $('pRe').onclick=()=>loadLevel(G.lv.id); $('pOut').onclick=()=>{ if(G.mode==='shift'){ endShift(); return; } G.st=null; G.ph='levels'; ui(); }; } }
+function tryFs(){ try{ const el=document.documentElement, r=el.requestFullscreen||el.webkitRequestFullscreen; if(r&&!document.fullscreenElement){ const p=r.call(el,{navigationUI:'hide'}); if(p&&p.catch) p.catch(()=>{}); } }catch(e){} }
+
+/* ---------- керування ---------- */
+cv.addEventListener('pointerdown',e=>{ if(G.ph!=='play') return; e.preventDefault(); audioInit(); const r=cv.getBoundingClientRect(); const i=hitK(e.clientX-r.left,e.clientY-r.top); G.down={i:i,x:e.clientX,y:e.clientY}; if(i>=0) tapK(i); else { G.sel=-1; if(G.ventMode){ G.ventMode=false; ui(); } } });
+cv.addEventListener('pointerup',e=>{ if(!G.down) return; const r=cv.getBoundingClientRect(); const i=hitK(e.clientX-r.left,e.clientY-r.top); if(Math.hypot(e.clientX-G.down.x,e.clientY-G.down.y)>24&&i>=0&&i!==G.down.i&&G.sel===G.down.i) tapK(i); G.down=null; });
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+const btn=(id,fn)=>$(id).addEventListener('click',e=>{ e.preventDefault(); audioInit(); if(G.ph==='play') fn(); });
+btn('bUndo',doUndo); btn('bRe',()=>loadLevel(G.lv.id)); btn('bPause',()=>{ G.ph='pause'; ui(); });
+btn('bVent',()=>{ if(G.mode==='lv'&&G.vent<=0) return; if(G.mode==='shift'&&G.shift.ventCd>0) return; G.ventMode=!G.ventMode; G.sel=-1; ui(); });
+window.addEventListener('keydown',e=>{ if(G.ph!=='play') return; if(e.code==='KeyZ') doUndo(); else if(e.code==='KeyV') $('bVent').click(); else if(e.code==='KeyR'&&G.mode==='lv') loadLevel(G.lv.id); else if(e.code==='KeyP'||e.code==='Escape'){ G.ph='pause'; ui(); } else if(/^Digit[1-9]$/.test(e.code)){ const n=+e.code.slice(5)-1; const silos=G.st.K.map((k,i)=>i).filter(i=>G.st.K[i].t==='silo'); if(silos[n]!=null) tapK(silos[n]); } });
+$('bSnd').onclick=()=>{ SAVE.snd=!SAVE.snd; save(); audioInit(); if(master) master.gain.value=SAVE.snd?.8:0; $('bSnd').textContent='Звук: '+(SAVE.snd?'увімк.':'вимк.'); }; $('bSnd').textContent='Звук: '+(SAVE.snd?'увімк.':'вимк.');
+
+/* ---------- звук ---------- */
+let AC=null, master=null, NB=null, hum=null;
+function audioInit(){ if(AC){ if(AC.state==='suspended') AC.resume(); return; } try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; return; } master=AC.createGain(); master.gain.value=SAVE.snd?.8:0; master.connect(AC.destination); NB=AC.createBuffer(1,AC.sampleRate,AC.sampleRate); const d=NB.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const s=AC.createBufferSource(); s.buffer=NB; s.loop=true; const f=AC.createBiquadFilter(); f.type='bandpass'; f.frequency.value=700; const g=AC.createGain(); g.gain.value=0; s.connect(f); f.connect(g); g.connect(master); s.start(); hum={g:g,f:f}; }
+const snd={ beep(f,dl,dur,type,vol,f2){ if(!AC) return; const t=AC.currentTime+dl, o=AC.createOscillator(), g=AC.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+dur); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.01); g.gain.exponentialRampToValueAtTime(.0008,t+dur); o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+.05); },
+ noise(dur,vol,fr){ if(!AC) return; const t=AC.currentTime, s=AC.createBufferSource(), g=AC.createGain(), fl=AC.createBiquadFilter(); s.buffer=NB; fl.type='bandpass'; fl.frequency.value=fr||1200; g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0008,t+dur); s.connect(fl); fl.connect(g); g.connect(master); s.start(t,Math.random()*.5); s.stop(t+dur+.05); },
+ auger(){ this.noise(.55,.12,2400); this.beep(90,0,.5,'sawtooth',.04,110); }, err(){ this.beep(200,0,.15,'square',.07,150); }, dry(){ this.noise(.5,.12,500); }, clean(){ this.noise(.35,.1,3500); }, vent(){ this.noise(.8,.12,900); },
+ spoil(){ this.beep(160,0,.4,'sawtooth',.1,80); }, win(){ [660,880].forEach((f,i)=>this.beep(f,i*.08,.15,'triangle',.1)); },
+ end(st){ (st>=2?[523,659,784,1047]:[523,659,784]).forEach((f,i)=>this.beep(f,i*.13,.3,'triangle',.13)); },
+ frame(){ if(!AC||!hum) return; hum.g.gain.setTargetAtTime(G.ph==='play'?(G.anim?.05:.012):0,AC.currentTime,.1); } };
+
+new ResizeObserver(resize).observe(cv); resize(); ui(); requestAnimationFrame(frame);
+if(isLoc) window.__e={G:G,E:E,LV:LV,tapK:tapK,loadLevel:loadLevel,startShift:startShift,play:play,finishMove:finishMove,R:()=>R,SAVE:SAVE,ui:ui,shiftStep:shiftStep};
+})();
+
+</script>
+</body>
+</html>
